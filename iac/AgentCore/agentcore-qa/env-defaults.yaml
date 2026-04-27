@@ -1,0 +1,23 @@
+# env-defaults.yaml — valores por defecto para la cuenta qa-agenticplatform.
+
+environment: "qa"
+aws_region: "us-east-1"
+account_id: "REPLACE_WITH_QA_ACCOUNT_ID"
+
+vpc_id: "REPLACE_WITH_QA_VPC_ID"
+subnet_ids:
+  - "REPLACE_WITH_SUBNET_A"
+  - "REPLACE_WITH_SUBNET_B"
+
+kms_key_arn: "arn:aws:kms:us-east-1:REPLACE_WITH_QA_ACCOUNT_ID:alias/agentcore-qa-artifacts"
+default_role_arn: "arn:aws:iam::REPLACE_WITH_QA_ACCOUNT_ID:role/agentcore-qa-runtime-execution"
+
+default_gateway_ids:
+  oauth_3lo: "REPLACE_WITH_GW_3LO_ID"
+  oauth_2lo: "REPLACE_WITH_GW_2LO_ID"
+  sigv4_m2m: "REPLACE_WITH_GW_SIGV4_ID"
+
+s3_artifact_buckets:
+  agents: "artifacts-qa-agentcore-agents"
+  mcp: "artifacts-qa-agentcore-mcp"
+  tools: "artifacts-qa-agentcore-tools"

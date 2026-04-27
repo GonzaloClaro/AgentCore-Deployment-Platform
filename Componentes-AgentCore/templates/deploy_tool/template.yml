@@ -1,0 +1,54 @@
+spec:
+  inputs:
+    job_name:
+      description: "Nombre del job en el pipeline consumidor"
+    stage:
+      description: "Stage donde correrá el job"
+      default: "deploy"
+    image_runner:
+      description: "Imagen Docker para el job"
+      default: ""
+    workload_path:
+      description: "Path al directorio de la tool (ej: tools/finance/calculator)"
+    capability:
+      description: "Capability de la tool"
+    name:
+      description: "Nombre de la tool"
+    tool_kind:
+      description: "embedded (código en el agente, no infra) | lambda (Lambda + gateway target) | open_api (HTTP API + gateway target)"
+      default: "embedded"
+    gateway:
+      description: "Gateway por defecto al que se agrega el target (solo si tool_kind != embedded)"
+      default: "oauth-3lo"
+    environment:
+      description: "Ambiente destino"
+      default: "dev"
+---
+# Macro para desplegar una tool. Tool puede ser:
+#   - embedded: solo código Python que se importa en el agente. NO necesita pipeline real,
+#     se hornea en la imagen del agente. Este job es no-op informativo.
+#   - lambda: composition tool-lambda. Requiere flujo completo (package + build zip + tf).
+#   - open_api: composition agent-with-tools en otro repo, o gateway-deploy con target external.
+
+include:
+  - local: templates/includes/base/base_dominio_components.yml
+  - local: templates/includes/base/pull_python_scripts_dominio.yml
+
+"$[[ inputs.job_name ]]":
+  stage: $[[ inputs.stage ]]
+  image: $[[ inputs.image_runner ]]
+  variables:
+    COMPONENT_PY: deploy_tool
+    ACTION: deploy
+    WORKLOAD_PATH: $[[ inputs.workload_path ]]
+    CAPABILITY: $[[ inputs.capability ]]
+    WORKLOAD_NAME: $[[ inputs.name ]]
+    TOOL_KIND: $[[ inputs.tool_kind ]]
+    GATEWAY: $[[ inputs.gateway ]]
+    ENVIRONMENT: $[[ inputs.environment ]]
+  script:
+    - !reference [.export_meta, script]
+    - !reference [.python_setup, script]
+    - !reference [.aws_auth, script]
+    - !reference [.pull_python_scripts, script]
+    - python python_scripts/$COMPONENT_PY/$ACTION.py

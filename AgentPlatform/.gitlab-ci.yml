@@ -1,0 +1,35 @@
+# AgentPlatform/.gitlab-ci.yml
+# Trigger al pipeline productivo del Compose-AgentCore.
+# La detección de qué workload cambió se hace por path; cada job aplica al directorio que cambió.
+
+include:
+  # Pipeline de despliegue de agentes (cuando cambian agents/**)
+  - project: Componentes/Compose/agentcore
+    ref: main
+    file: pipeline_deploy_agents.yml
+    rules:
+      - changes:
+          - "agents/**/*"
+
+  # Pipeline de despliegue de MCP (cuando cambian mcp/**)
+  - project: Componentes/Compose/agentcore
+    ref: main
+    file: pipeline_deploy_mcps.yml
+    rules:
+      - changes:
+          - "mcp/**/*"
+
+  # Pipeline de catalog (solo en main)
+  - project: Componentes/Compose/agentcore
+    ref: main
+    file: pipeline_catalog.yml
+    rules:
+      - if: '$CI_COMMIT_BRANCH == "main"'
+
+# El compose espera estas variables resueltas a partir del path detectado por changes.
+# En GitLab moderno, usar `rules:changes` y `dotenv` artifacts para propagar el path
+# del workload al resto del pipeline.
+variables:
+  # Detección del workload modificado se hace en un job pre-pipeline (a implementar)
+  # que escribe WORKLOAD_PATH/CAPABILITY/WORKLOAD_NAME a un dotenv y lo expone.
+  ORG_RUNNER_IMAGE: "$ORG_RUNNER_IMAGE"

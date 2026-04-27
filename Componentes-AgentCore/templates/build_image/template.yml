@@ -1,0 +1,55 @@
+spec:
+  inputs:
+    job_name:
+      description: "Nombre del job en el pipeline consumidor"
+    stage:
+      description: "Stage donde correrá el job"
+      default: "build"
+    image_runner:
+      description: "Imagen Docker para el job (debe tener docker buildx)"
+      default: ""
+    workload_path:
+      description: "Path al directorio del workload"
+    ecr_repo:
+      description: "Nombre del repo ECR destino (ej: agentcore-agents-customer-support-chatbot-tier1)"
+    image_tag:
+      description: "Tag de la imagen (default: $CI_COMMIT_SHORT_SHA)"
+      default: ""
+    dockerfile_path:
+      description: "Dockerfile a usar; default config_files/build_image/agent-runtime.Dockerfile"
+      default: "config_files/build_image/agent-runtime.Dockerfile"
+    platform:
+      description: "Plataforma destino"
+      default: "linux/arm64"
+    environment:
+      description: "Ambiente destino"
+      default: "dev"
+---
+include:
+  - local: templates/includes/base/base_dominio_components.yml
+  - local: templates/includes/base/pull_python_scripts_dominio.yml
+  - local: templates/includes/base/pull_config_files_dominio.yml
+
+"$[[ inputs.job_name ]]":
+  stage: $[[ inputs.stage ]]
+  image: $[[ inputs.image_runner ]]
+  variables:
+    COMPONENT_PY: build_image
+    ACTION: build
+    WORKLOAD_PATH: $[[ inputs.workload_path ]]
+    ECR_REPO: $[[ inputs.ecr_repo ]]
+    IMAGE_TAG: $[[ inputs.image_tag ]]
+    DOCKERFILE_PATH: $[[ inputs.dockerfile_path ]]
+    BUILD_PLATFORM: $[[ inputs.platform ]]
+    ENVIRONMENT: $[[ inputs.environment ]]
+  script:
+    - !reference [.export_meta, script]
+    - !reference [.python_setup, script]
+    - !reference [.aws_auth, script]
+    - !reference [.pull_python_scripts, script]
+    - !reference [.pull_config_files, script]
+    - python python_scripts/$COMPONENT_PY/$ACTION.py
+  artifacts:
+    paths:
+      - image_meta.json
+    expire_in: 7 days

@@ -1,0 +1,61 @@
+# Local env (NUNCA commitear)
+.env
+.env.local
+.env.*.local
+
+# Credenciales y llaves — defensivo
+.aws/
+credentials
+credentials.*
+*.pem
+*.key
+id_rsa*
+.gitlab-token
+
+# Terraform
+**/.terraform/
+**/.terraform.tfstate.lock.info
+# .terraform.lock.hcl: SI commitear (determinismo provider version entre local y CI)
+**/terraform.tfstate
+**/terraform.tfstate.*
+**/terraform.tfstate.backup
+**/*.tfplan
+**/crash.log
+**/crash.*.log
+**/override.tf
+**/override.tf.json
+**/*_override.tf
+**/*_override.tf.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Build artifacts
+*.zip
+artifact_meta.json
+image_meta.json
+prompt_arns.json
+secret_meta.json
+scan_report.json
+smoke_report.json
+leanix_publish_report.json
+terraform.auto.tfvars.json
+composition_name.txt

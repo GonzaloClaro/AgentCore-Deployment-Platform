@@ -1,0 +1,218 @@
+# =============================================================================
+# Plantilla COMPLETA del manifest opinado de un workload AgentCore.
+# Copia este directorio a agents/<capability>/<nombre>/ y borra los campos
+# que no necesites. Solo metadata, spec.composition y spec.runtime son obligatorios.
+#
+# Referencia completa: ../../../MANIFEST_REFERENCE.md
+# JSON-schema:         ../../../Componentes-AgentCore/config_files/validate_manifest/manifest.schema.json
+# =============================================================================
+
+apiVersion: v1
+kind: Workload
+
+# -----------------------------------------------------------------------------
+# Metadata — siempre obligatoria
+# -----------------------------------------------------------------------------
+metadata:
+  name: my-agent                      # kebab-case, único en el capability
+  capability: my-capability           # debe estar en lista cerrada (workshop pendiente)
+  owner: team-example                 # equipo dueño (visible en LeanIX)
+  description: "Descripción breve del agente"
+  tags: [chatbot, internal]
+  kind: agents                        # agents | mcp | tools
+  # target_shard: prd-shard-a         # opcional, solo PRD. Ver MULTI_ACCOUNT.md.
+
+# -----------------------------------------------------------------------------
+# Spec
+# -----------------------------------------------------------------------------
+spec:
+  # Selector de composición Terraform.
+  # Para combinaciones raras: usa agent-full + flags en spec.features.
+  composition: agent-chatbot          # agent-chatbot | agent-with-kb | agent-with-tools | mcp-server | agent-full
+
+  # ---------------------------------------------------------------------------
+  # Runtime — siempre obligatorio
+  # ---------------------------------------------------------------------------
+  runtime:
+    entrypoint: agent.py              # Archivo en src/ que expone `app` (FastAPI/uvicorn)
+    env:                              # Variables de entorno inyectadas al contenedor
+      LOG_LEVEL: "INFO"
+      # Las env vars del agente se inyectan tal cual aquí. ARNs de prompts/KB
+      # se inyectan automáticamente por el pipeline (ver `prompts[].alias` y KB).
+    memory_strategy: summarization    # summarization | semantic | user-preference | none
+    # Para rollback: descomenta y apunta a la versión previa
+    # target_version: "3"
+
+  # ---------------------------------------------------------------------------
+  # Models — modelos LLM que usa el agente.
+  # Cada entry produce env vars con prefijo del alias (PRIMARY_MODEL_ID, etc.)
+  # que el código del agente lee con os.environ[...].
+  #
+  # Lista cerrada: el model_id debe estar en config_files/allowed_models.yml
+  # y permitido para el environment target. Cambios = MR auditable.
+  # ---------------------------------------------------------------------------
+  models:
+    # Modelo Bedrock (caso típico)
+    - alias: PRIMARY_MODEL              # → env vars PRIMARY_MODEL_ID, PRIMARY_MODEL_PROVIDER, PRIMARY_MODEL_REGION
+      provider: bedrock
+      bedrock:
+        model_id: anthropic.claude-3-5-sonnet-20241022-v2:0
+        region: us-east-1               # opcional, default = aws_region del shard
+        # Para cross-region inference profile en lugar de model_id directo:
+        # inference_profile_arn: arn:aws:bedrock:us-east-1:111122223333:inference-profile/us.anthropic.claude-3-5-sonnet-20241022-v2:0
+
+    # Fallback Bedrock (otro modelo)
+    - alias: FALLBACK_MODEL
+      provider: bedrock
+      bedrock:
+        model_id: anthropic.claude-3-5-haiku-20241022-v1:0
+
+    # Modelo Azure (si el caso lo amerita)
+    # - alias: AZURE_MODEL              # → env vars AZURE_MODEL_*, incluida AZURE_MODEL_API_KEY_SECRET_ARN
+    #   provider: azure
+    #   azure:
+    #     endpoint: "https://my-org.openai.azure.com/"
+    #     deployment: "gpt-4o-prod"     # nombre del deployment Azure
+    #     model_id: gpt-4o              # subyacente (validado contra allowed_models.yml)
+    #     api_version: "2024-08-01-preview"
+    #     api_key_secret_var: AZURE_OPENAI_API_KEY   # CI var masked, sube a Secrets Manager via upload_secret
+
+  # ---------------------------------------------------------------------------
+  # Knowledge Base — solo agent-with-kb o agent-full con enable_kb=true
+  # ---------------------------------------------------------------------------
+  knowledge_base:
+    embedding: amazon.titan-embed-text-v2:0
+    sources_file: ./kb/data_sources.yaml    # YAML con lista de S3 sources
+
+  # ---------------------------------------------------------------------------
+  # Prompts — versionados en Bedrock Prompt Management
+  # Por defecto: publicados via SDK (componente publish_prompt) → versionado nativo
+  # Opcional: gestionados vía Terraform (features.enable_prompts_terraform=true)
+  # Ver MANIFEST_REFERENCE.md §3 para la decisión.
+  # ---------------------------------------------------------------------------
+  prompts:
+    - file: ./prompts/system_prompt.yaml
+      alias: SYSTEM_PROMPT_ARN              # nombre de env var con el ARN versionado
+      # Solo si enable_prompts_terraform=true:
+      # model_id: anthropic.claude-3-5-sonnet-20241022-v2:0
+      # text: |
+      #   Contenido inline del prompt...
+
+  # ---------------------------------------------------------------------------
+  # Gateway Targets — solo agent-with-tools, mcp-server o agent-full con enable_tools=true
+  # Los workloads NO crean gateways; agregan TARGETS a los 3 default del ambiente.
+  # ---------------------------------------------------------------------------
+  gateway_targets:
+    - gateway: oauth-3lo                    # oauth-3lo | oauth-2lo | sigv4-m2m
+      tools_schema: ./openapi.yaml          # OpenAPI schema (se sube a S3 por el pipeline)
+
+  # ---------------------------------------------------------------------------
+  # OAuth Provider — solo mcp-server o agent-full
+  # El client_secret NUNCA va aquí. Se carga desde una CI var masked y el componente
+  # upload_secret la sube a Secrets Manager. Aquí solo va el nombre de la variable.
+  # ---------------------------------------------------------------------------
+  oauth_provider:
+    client_id: "REPLACE_WITH_OAUTH_CLIENT_ID"
+    client_secret_var: "OAUTH_CLIENT_SECRET"      # nombre de la CI variable masked
+    issuer: "https://idp.example.com"
+    authorization_endpoint: "https://idp.example.com/oauth2/authorize"
+    token_endpoint: "https://idp.example.com/oauth2/token"
+
+  # ---------------------------------------------------------------------------
+  # Observability — opcional, default enabled=true
+  # ---------------------------------------------------------------------------
+  observability:
+    enabled: true
+    dashboard: false                  # CW dashboard dedicado al runtime
+
+  # ---------------------------------------------------------------------------
+  # Gateway Policies — Cedar policies opcionales attached a uno o más gateways.
+  # El componente CI apply_policy lee los .cedar files y los inyecta al tfvars.
+  # Solo se aplican si features.enable_policies = true.
+  #
+  # Cedar = lenguaje de autorización fine-grained con default deny + forbid wins.
+  # Ejemplo de policy en file:
+  #   permit(principal is AgentCore::OAuthUser,
+  #          action == AgentCore::Action::"InsuranceAPI__file_claim",
+  #          resource == AgentCore::Gateway::"arn:...:gateway/oauth-3lo");
+  # ---------------------------------------------------------------------------
+  gateway_policies:
+    - gateway: oauth-3lo                # cuál de los 3 default
+      attach_mode: LOGONLY              # LOGONLY (default, shadow mode) | ENFORCE (bloquea)
+      cedar_files:
+        - ./policies/insurance.cedar
+        - ./policies/audit.cedar
+
+  # ---------------------------------------------------------------------------
+  # Runtime IAM — policies opcionales sobre el role del runtime.
+  # Si declaras este bloque, se crea un role custom per-workload (en lugar de usar el
+  # default_role_arn compartido). Solo aplicable a composition: agent-full.
+  #
+  # Dos modos:
+  #   1. managed_policy_arns: ARNs de managed policies ya creadas por el equipo de
+  #      accesos. Path RECOMENDADO — la auditoría queda del lado de accesos.
+  #   2. inline_policies: archivos JSON declarados en este repo. Útil para iterar en
+  #      DEV/QA. Va con manual approval gate antes del apply en QA/PRD.
+  # ---------------------------------------------------------------------------
+  runtime_iam:
+    managed_policy_arns:
+      # ARNs de policies que el equipo de accesos creó y aprobó:
+      - "arn:aws:iam::111122223333:policy/agentcore-shared-read-kb"
+      - "arn:aws:iam::111122223333:policy/agentcore-shared-invoke-tools"
+    inline_policies:
+      # JSON files con policy documents (relativos al manifest)
+      - name: read-data-bucket
+        file: ./iam/example-read-bucket.json
+    permissions_boundary_arn: ""        # opcional, vacío = sin boundary
+    attach_bedrock_invoke: true         # default true, attacha bedrock:InvokeModel/Converse/GetPrompt
+
+  # ---------------------------------------------------------------------------
+  # Features — flags booleanos que activan/desactivan componentes opcionales.
+  # Solo relevante en composition=agent-full.
+  # En las composiciones específicas estos flags se ignoran (el componente está
+  # presente o ausente según la composición elegida).
+  # ---------------------------------------------------------------------------
+  features:
+    enable_observability: true        # crea log group + X-Ray + dashboard
+    enable_policies: false            # set true para aplicar gateway_policies (Cedar)
+    enable_custom_role: false         # forzar role custom incluso sin policies declaradas
+    # Nota: prompts siempre van vía SDK (publish_prompt). No hay opción Terraform.
+
+# =============================================================================
+# Ejemplos rápidos por composition (borra/comenta lo que no apliques)
+# =============================================================================
+#
+# Chatbot simple (agent-chatbot):
+#   metadata: { ... }
+#   spec:
+#     composition: agent-chatbot
+#     runtime: { entrypoint: agent.py, memory_strategy: summarization }
+#     prompts: [{ file: ./prompts/system.yaml, alias: SYSTEM_PROMPT_ARN }]
+#
+# Agente con RAG (agent-with-kb):
+#   metadata: { ... }
+#   spec:
+#     composition: agent-with-kb
+#     runtime: { entrypoint: agent.py }
+#     knowledge_base: { sources_file: ./kb/data_sources.yaml }
+#     prompts: [{ file: ./prompts/system.yaml }]
+#
+# MCP server (mcp-server):
+#   metadata: { ..., kind: mcp }
+#   spec:
+#     composition: mcp-server
+#     runtime: { entrypoint: mcp_server.py }
+#     gateway_targets: [{ gateway: oauth-3lo }]
+#     oauth_provider: { client_id: ..., issuer: ..., ... }
+#
+# Cosa rara (agent-full + flags):
+#   metadata: { ... }
+#   spec:
+#     composition: agent-full
+#     runtime: { entrypoint: agent.py, memory_strategy: semantic }
+#     knowledge_base: { sources_file: ./kb/data_sources.yaml }
+#     gateway_targets: [{ gateway: sigv4-m2m, tools_schema: ./openapi.yaml }]
+#     features:
+#       enable_observability: true
+#       enable_kb: true
+#       enable_tools: true

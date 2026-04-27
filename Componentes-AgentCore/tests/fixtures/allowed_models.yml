@@ -1,0 +1,12 @@
+# Fixture de allowed_models para tests
+bedrock:
+  - id: "anthropic.claude-3-5-sonnet-20241022-v2:0"
+    environments: [dev, qa, prd]
+  - id: "anthropic.claude-3-5-haiku-20241022-v1:0"
+    environments: [dev, qa, prd]
+  - id: "anthropic.claude-3-opus-20240229-v1:0"
+    environments: [dev, qa]   # NO permitido en prd
+
+azure:
+  - id: "gpt-4o"
+    environments: [dev, qa, prd]

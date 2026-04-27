@@ -1,0 +1,46 @@
+spec:
+  inputs:
+    job_name:
+      description: "Nombre del job en el pipeline consumidor"
+    stage:
+      description: "Stage donde correrá el job (típicamente 'deploy')"
+      default: "deploy"
+    image_runner:
+      description: "Imagen Docker para el job"
+      default: ""
+    workload_path:
+      description: "Path al directorio del agente"
+    capability:
+      description: "Capability del agente"
+    name:
+      description: "Nombre del agente"
+    environment:
+      description: "Ambiente destino"
+      default: "dev"
+---
+# Macro: empaqueta los pasos típicos para un agente.
+# Para flujos productivos detallados se prefiere usar los componentes individuales
+# (validate_manifest, package_artifact, build_image, render_tfvars, trigger_iac).
+# Este componente macro existe para usos sencillos: prototipos o agentes que no
+# necesitan KB ni prompts versionados.
+
+include:
+  - local: templates/includes/base/base_dominio_components.yml
+  - local: templates/includes/base/pull_python_scripts_dominio.yml
+
+"$[[ inputs.job_name ]]":
+  stage: $[[ inputs.stage ]]
+  image: $[[ inputs.image_runner ]]
+  variables:
+    COMPONENT_PY: deploy_agent
+    ACTION: deploy
+    WORKLOAD_PATH: $[[ inputs.workload_path ]]
+    CAPABILITY: $[[ inputs.capability ]]
+    WORKLOAD_NAME: $[[ inputs.name ]]
+    ENVIRONMENT: $[[ inputs.environment ]]
+  script:
+    - !reference [.export_meta, script]
+    - !reference [.python_setup, script]
+    - !reference [.aws_auth, script]
+    - !reference [.pull_python_scripts, script]
+    - python python_scripts/$COMPONENT_PY/$ACTION.py

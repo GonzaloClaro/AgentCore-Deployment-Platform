@@ -1,0 +1,13 @@
+compositions:
+  agent-base:
+    requires: [runtime]
+    optional: [observability]
+  agent-chatbot:
+    requires: [runtime]
+    optional: [observability]
+  agent-with-kb:
+    requires: [runtime, knowledge_base]
+    optional: [prompts, observability]
+  mcp-server:
+    requires: [runtime, gateway_targets]
+    optional: [oauth_provider, observability]

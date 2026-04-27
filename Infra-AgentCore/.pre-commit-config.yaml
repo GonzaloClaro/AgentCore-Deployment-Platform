@@ -1,0 +1,20 @@
+# Pre-commit hooks para Infra-AgentCore.
+# Instalar: pip install pre-commit && pre-commit install
+# Correr manual: pre-commit run --all-files
+repos:
+  - repo: local
+    hooks:
+      - id: tf-fmt-check
+        name: tofu fmt -check
+        entry: scripts/tf-check.sh fmt-only
+        language: system
+        pass_filenames: false
+        files: \.tf$
+
+      - id: tf-validate
+        name: tofu validate (compositions + foundation)
+        entry: scripts/tf-check.sh
+        language: system
+        pass_filenames: false
+        files: \.tf$
+        stages: [pre-push]  # validate es lento (init descarga provider) → solo pre-push, no pre-commit

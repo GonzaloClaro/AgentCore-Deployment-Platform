@@ -1,0 +1,13 @@
+# Definición de fuentes de datos para Knowledge Base con S3 Vectors.
+# El bucket debe existir; el módulo knowledge-base solo configura el data source.
+
+sources:
+  - name: docs-public
+    bucket_arn: "arn:aws:s3:::my-org-kb-public"
+    inclusion_prefixes:
+      - "docs/"
+
+  # - name: docs-internal
+  #   bucket_arn: "arn:aws:s3:::my-org-kb-internal"
+  #   inclusion_prefixes:
+  #     - "knowledge/"

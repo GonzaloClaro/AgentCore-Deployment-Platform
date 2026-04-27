@@ -1,0 +1,155 @@
+# pipeline_deploy_agents.yml
+# Orquesta el despliegue de un agente desde AgentPlatform/agents/{capability}/{name}.
+# Incluido por AgentPlatform/.gitlab-ci.yml.
+#
+# Estructura de stages:
+#   .pre               → telemetry start (genera TRACE_ID)
+#   validate           → validate_manifest + validate_structure (cross-validation)
+#   package            → package_artifact (zip + S3)
+#   build              → build_image (Docker buildx ARM64 + ECR)
+#   scan               → scan_image (Trivy/Inspector gate)
+#   secrets            → upload_secret (CI vars → Secrets Manager)
+#   publish-prompts    → publish_prompt (SDK → Bedrock Prompt Mgmt)
+#   render             → apply_policy (.cedar → JSON) + render_tfvars
+#   deploy             → trigger_iac (multi-project trigger)
+#   smoke              → invocación /ping post-apply
+#   .post              → telemetry end
+
+stages:
+  - .pre
+  - validate
+  - package
+  - build
+  - scan
+  - secrets
+  - publish-prompts
+  - render
+  - deploy
+  - smoke
+  - .post
+
+include:
+  - local: rules/branch-to-env.yml
+  - local: rules/paths.yml
+  - local: variables/env-dev.yml
+  - local: variables/env-qa.yml
+  - local: variables/env-prd.yml
+
+  # ─── Telemetry start: genera TRACE_ID, propagado al resto via dotenv ───
+  - component: $CI_SERVER_FQDN/Componentes/agentcore/pipeline_telemetry@main
+    inputs:
+      job_name: telemetry-start
+      stage: .pre
+      image_runner: $IMAGE_BASE
+      action: emit_start
+      environment: $ENVIRONMENT
+
+  # ─── Validaciones (validate stage) ───
+  - component: $CI_SERVER_FQDN/Componentes/agentcore/validate_manifest@main
+    inputs:
+      job_name: validate-manifest
+      stage: validate
+      image_runner: $IMAGE_BASE
+      manifest_path: $WORKLOAD_PATH/manifest.yaml
+
+  - component: $CI_SERVER_FQDN/Componentes/agentcore/validate_structure@main
+    inputs:
+      job_name: validate-structure
+      stage: validate
+      image_runner: $IMAGE_BASE
+      manifest_path: $WORKLOAD_PATH/manifest.yaml
+
+  # ─── Build pipeline ───
+  - component: $CI_SERVER_FQDN/Componentes/agentcore/package_artifact@main
+    inputs:
+      job_name: package-artifact
+      stage: package
+      image_runner: $IMAGE_BASE
+      workload_path: $WORKLOAD_PATH
+      capability: $CAPABILITY
+      name: $WORKLOAD_NAME
+      kind: agents
+      environment: $ENVIRONMENT
+      s3_bucket: $S3_ARTIFACTS_BUCKET
+
+  - component: $CI_SERVER_FQDN/Componentes/agentcore/build_image@main
+    inputs:
+      job_name: build-image
+      stage: build
+      image_runner: $IMAGE_BASE
+      workload_path: $WORKLOAD_PATH
+      ecr_repo: agentcore-agents-${CAPABILITY}-${WORKLOAD_NAME}
+      environment: $ENVIRONMENT
+
+  - component: $CI_SERVER_FQDN/Componentes/agentcore/scan_image@main
+    inputs:
+      job_name: scan-image
+      stage: scan
+      image_runner: $IMAGE_BASE
+      image_uri: ${ECR_REGISTRY_PATTERN}/agentcore-agents-${CAPABILITY}-${WORKLOAD_NAME}:${CI_COMMIT_SHORT_SHA}
+      severity_threshold: HIGH
+      environment: $ENVIRONMENT
+
+  # ─── Prompts via SDK (camino oficial, ver MANIFEST_REFERENCE §3) ───
+  - component: $CI_SERVER_FQDN/Componentes/agentcore/publish_prompt@main
+    inputs:
+      job_name: publish-prompts
+      stage: publish-prompts
+      image_runner: $IMAGE_BASE
+      prompts_dir: ${WORKLOAD_PATH}/prompts
+      workload_name: $WORKLOAD_NAME
+      capability: $CAPABILITY
+      environment: $ENVIRONMENT
+
+  # ─── apply_policy: lee .cedar files → cedar_policies.json (consumido por render_tfvars) ───
+  - component: $CI_SERVER_FQDN/Componentes/agentcore/apply_policy@main
+    inputs:
+      job_name: apply-policy
+      stage: render
+      image_runner: $IMAGE_BASE
+      workload_path: $WORKLOAD_PATH
+      manifest_path: $WORKLOAD_PATH/manifest.yaml
+      environment: $ENVIRONMENT
+
+  - component: $CI_SERVER_FQDN/Componentes/agentcore/render_tfvars@main
+    inputs:
+      job_name: render-tfvars
+      stage: render
+      image_runner: $IMAGE_BASE
+      manifest_path: $WORKLOAD_PATH/manifest.yaml
+      environment: $ENVIRONMENT
+
+  - component: $CI_SERVER_FQDN/Componentes/agentcore/trigger_iac@main
+    inputs:
+      job_name: trigger-iac
+      stage: deploy
+      image_runner: $IMAGE_BASE
+      target_project: $TARGET_IAC_PROJECT
+      environment: $ENVIRONMENT
+
+  # ─── Telemetry end: emit pipeline.end con resumen ───
+  - component: $CI_SERVER_FQDN/Componentes/agentcore/pipeline_telemetry@main
+    inputs:
+      job_name: telemetry-end
+      stage: .post
+      image_runner: $IMAGE_BASE
+      action: emit_end
+      environment: $ENVIRONMENT
+
+# Asegurar orden de jobs en el stage `render` (apply_policy ANTES de render_tfvars)
+render-tfvars:
+  needs: [validate-manifest, validate-structure, package-artifact, build-image, scan-image, publish-prompts, apply-policy]
+
+# Asegurar que apply_policy corra después de validate
+apply-policy:
+  needs: [validate-manifest, validate-structure]
+
+default:
+  tags: [devsecops-common]
+  interruptible: true
+
+workflow:
+  rules:
+    - !reference [.rule_branch_dev, rules]
+    - !reference [.rule_branch_qa, rules]
+    - !reference [.rule_branch_prd, rules]

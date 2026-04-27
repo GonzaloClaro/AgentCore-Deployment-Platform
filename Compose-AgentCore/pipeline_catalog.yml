@@ -1,0 +1,26 @@
+# pipeline_catalog.yml
+# Publica metadata de todos los manifests del repo a LeanIX.
+# Se ejecuta solo en branch main, post-merge.
+
+stages:
+  - catalog
+
+include:
+  - component: $CI_SERVER_FQDN/Componentes/agentcore/publish_leanix@main
+    inputs:
+      job_name: publish-leanix
+      stage: catalog
+      image_runner: $IMAGE_BASE
+      manifests_glob: "**/manifest.yaml"
+      leanix_endpoint: $LEANIX_ENDPOINT
+      environment: prd
+
+default:
+  tags: [devsecops-common]
+
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+variables:
+  IMAGE_BASE: "$ORG_RUNNER_IMAGE"

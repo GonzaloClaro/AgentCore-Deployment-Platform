@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Workload
+metadata:
+  name: hello-world
+  capability: sandbox
+  owner: team-platform
+spec:
+  composition: agent-chatbot
+  runtime:
+    entrypoint: agent.py

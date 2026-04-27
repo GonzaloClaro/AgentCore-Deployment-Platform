@@ -1,0 +1,80 @@
+# pipeline_drift_detection.yml
+# Detecta drift entre el state Terraform y la realidad en AWS.
+# Disparado por GitLab Schedule (cron nightly recomendado: 0 3 * * *).
+#
+# Configuración:
+#   1. En cada deployable (iac/AgentCore/agentcore-{env, prd-shard-*}): GitLab → Schedules.
+#   2. Crear schedule "drift-detection-nightly" con cron "0 3 * * *", branch=main.
+#   3. CI variables del schedule (heredadas):
+#      - SNS_TOPIC_DRIFT_ARN: arn:aws:sns:...:agentcore-drift-alerts
+#      - DRIFT_SEVERITY_THRESHOLD: medium (low|medium|high|critical)
+#
+# Lo que hace:
+#   1. terraform plan -detailed-exitcode -out=plan.binary  (sobre TODOS los workloads del shard)
+#   2. terraform show -json plan.binary > plan.json
+#   3. drift_check analiza el JSON, categoriza severidad, alerta a SNS si aplica.
+
+stages:
+  - plan
+  - analyze
+  - alert
+
+include:
+  - local: variables/env-dev.yml
+  - local: variables/env-qa.yml
+  - local: variables/env-prd.yml
+
+  - component: $CI_SERVER_FQDN/Componentes/agentcore/drift_check@main
+    inputs:
+      job_name: drift-analyze
+      stage: analyze
+      image_runner: $IMAGE_BASE
+      sns_topic_arn: $SNS_TOPIC_DRIFT_ARN
+      severity_threshold: ${DRIFT_SEVERITY_THRESHOLD:-medium}
+      environment: $ENVIRONMENT
+
+variables:
+  TF_ROOT: "."
+  TF_STATE_NAMES_GLOB: "agentcore-*"     # iterar sobre todos los states del proyecto
+
+.tf_image:
+  image: hashicorp/terraform:1.7
+
+drift-plan:
+  extends: .tf_image
+  stage: plan
+  script:
+    # Iterar sobre cada state name conocido en este deployable
+    # Para simplicidad: itera sobre composiciones que sabemos que pueden estar usadas
+    - mkdir -p drift_plans
+    - |
+      for COMPO in agent-base agent-chatbot agent-with-kb agent-with-tools mcp-server tool-lambda gateway-deploy; do
+        for STATE_KEY in $(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN_READ_API" \
+                          "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/terraform/state" \
+                          | jq -r ".[] | select(.name | startswith(\"agentcore-${ENVIRONMENT}-${COMPO}-\")) | .name"); do
+          echo "[drift-plan] state=$STATE_KEY composition=$COMPO"
+          (
+            cd "compositions/$COMPO" 2>/dev/null || continue
+            terraform init -backend-config="address=${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/terraform/state/${STATE_KEY}" \
+                           -backend-config="username=gitlab-ci-token" \
+                           -backend-config="password=${CI_JOB_TOKEN}"
+            terraform plan -detailed-exitcode -out=plan.binary || true   # exit 2 = drift, no fallar el job aquí
+            terraform show -json plan.binary > "../../drift_plans/${STATE_KEY}.json" || true
+          )
+        done
+      done
+  artifacts:
+    paths:
+      - drift_plans/
+    expire_in: 7 days
+
+# El componente drift_check (incluido arriba) corre sobre cada plan.json
+# Para producción real: hacer un job per state name, este es esqueleto.
+
+default:
+  tags: [devsecops-common]
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'        # permitir trigger manual desde UI

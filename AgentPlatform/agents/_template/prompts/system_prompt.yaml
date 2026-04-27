@@ -1,0 +1,15 @@
+# Prompt versionado en Bedrock Prompt Management.
+# Componente publish_prompt registra/versiona y devuelve ARN.
+
+description: "Prompt de sistema base del agente"
+default_variant: default
+alias: SYSTEM_PROMPT_ARN
+
+variants:
+  - name: default
+    template_type: TEXT
+    model_id: anthropic.claude-3-5-sonnet-20241022-v2:0
+    text: |
+      Eres un asistente útil. Responde de forma concisa y honesta.
+      Si no sabes algo, dilo. No inventes información.
+    input_variables: []

@@ -1,0 +1,26 @@
+# Tool EMBEDDED — código Python que se importa directo en el agente.
+# NO crea infra. El pipeline solo valida y publica como librería local.
+# El agente la consume con: from tools.<name> import handler
+#
+# Esta plantilla es para tools que comparten contexto con el agente
+# (ej: helpers de formato, validaciones, transformaciones de datos en memoria).
+
+apiVersion: v1
+kind: Workload
+
+metadata:
+  name: my-tool
+  capability: my-capability
+  owner: team-example
+  description: "Tool embedded importada por agentes del capability"
+  tags: [tool, embedded]
+  kind: tools
+
+spec:
+  composition: agent-base               # placeholder; tools embedded NO se despliegan via TF
+  runtime:
+    entrypoint: tool.py                 # archivo principal de la tool
+    env: {}
+
+  tool:
+    kind: embedded                      # ⭐ no infra, solo código Python

@@ -1,0 +1,47 @@
+spec:
+  inputs:
+    job_name:
+      description: "Nombre del job en el pipeline consumidor"
+    stage:
+      description: "Stage donde correrá el job"
+      default: "deploy"
+    image_runner:
+      description: "Imagen Docker para el job"
+      default: ""
+    workload_path:
+      description: "Path al directorio del MCP server"
+    capability:
+      description: "Capability del MCP"
+    name:
+      description: "Nombre del MCP server"
+    gateway:
+      description: "Nombre del gateway por defecto al que se agrega el target (oauth-3lo|oauth-2lo|sigv4-m2m)"
+      default: "oauth-3lo"
+    environment:
+      description: "Ambiente destino"
+      default: "dev"
+---
+# Macro: empaqueta los pasos típicos para desplegar un MCP server.
+# Composition asociada: compositions/mcp-server.
+
+include:
+  - local: templates/includes/base/base_dominio_components.yml
+  - local: templates/includes/base/pull_python_scripts_dominio.yml
+
+"$[[ inputs.job_name ]]":
+  stage: $[[ inputs.stage ]]
+  image: $[[ inputs.image_runner ]]
+  variables:
+    COMPONENT_PY: deploy_mcp
+    ACTION: deploy
+    WORKLOAD_PATH: $[[ inputs.workload_path ]]
+    CAPABILITY: $[[ inputs.capability ]]
+    WORKLOAD_NAME: $[[ inputs.name ]]
+    GATEWAY: $[[ inputs.gateway ]]
+    ENVIRONMENT: $[[ inputs.environment ]]
+  script:
+    - !reference [.export_meta, script]
+    - !reference [.python_setup, script]
+    - !reference [.aws_auth, script]
+    - !reference [.pull_python_scripts, script]
+    - python python_scripts/$COMPONENT_PY/$ACTION.py

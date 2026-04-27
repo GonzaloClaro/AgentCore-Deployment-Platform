@@ -1,0 +1,47 @@
+spec:
+  inputs:
+    job_name:
+      description: "Nombre del job en el pipeline consumidor"
+    stage:
+      description: "Stage donde correrá el job"
+      default: "scan"
+    image_runner:
+      description: "Imagen Docker con Trivy o aws-cli (Inspector)"
+      default: ""
+    image_uri:
+      description: "ECR URI completo de la imagen a escanear"
+    severity_threshold:
+      description: "Severidad mínima que rompe el job (CRITICAL|HIGH|MEDIUM|LOW)"
+      default: "HIGH"
+    scanner:
+      description: "trivy | inspector"
+      default: "trivy"
+    environment:
+      description: "Ambiente destino"
+      default: "dev"
+---
+include:
+  - local: templates/includes/base/base_dominio_components.yml
+  - local: templates/includes/base/pull_python_scripts_dominio.yml
+
+"$[[ inputs.job_name ]]":
+  stage: $[[ inputs.stage ]]
+  image: $[[ inputs.image_runner ]]
+  variables:
+    COMPONENT_PY: scan_image
+    ACTION: scan
+    IMAGE_URI: $[[ inputs.image_uri ]]
+    SEVERITY_THRESHOLD: $[[ inputs.severity_threshold ]]
+    SCANNER: $[[ inputs.scanner ]]
+    ENVIRONMENT: $[[ inputs.environment ]]
+  script:
+    - !reference [.export_meta, script]
+    - !reference [.python_setup, script]
+    - !reference [.aws_auth, script]
+    - !reference [.pull_python_scripts, script]
+    - python python_scripts/$COMPONENT_PY/$ACTION.py
+  artifacts:
+    when: always
+    paths:
+      - scan_report.json
+    expire_in: 30 days

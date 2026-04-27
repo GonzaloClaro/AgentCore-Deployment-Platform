@@ -1,0 +1,35 @@
+# Tool LAMBDA — desplegada como AWS Lambda independiente y registrada como gateway target.
+# Ideal para tools que:
+#   - escalan independiente del agente
+#   - sirven a múltiples agentes
+#   - requieren permisos AWS específicos
+#   - tienen dependencias pesadas que no quieres en cada imagen de agente
+
+apiVersion: v1
+kind: Workload
+
+metadata:
+  name: my-lambda-tool
+  capability: my-capability
+  owner: team-example
+  description: "Tool Lambda expuesta via gateway"
+  tags: [tool, lambda]
+  kind: tools
+
+spec:
+  composition: tool-lambda              # ⭐ infra: Lambda ARM64 + gateway target
+  runtime:
+    entrypoint: tool.py                 # archivo principal del zip
+    env:
+      LOG_LEVEL: INFO
+
+  tool:
+    kind: lambda                        # ⭐ kind=lambda
+    handler: tool.handler               # módulo.función
+    runtime_version: python3.12
+    timeout_seconds: 30
+    memory_mb: 512
+
+  # Registra la Lambda como target en uno o más gateways default
+  gateway_targets:
+    - gateway: oauth-3lo                # oauth-3lo | oauth-2lo | sigv4-m2m

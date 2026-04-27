@@ -1,0 +1,44 @@
+spec:
+  inputs:
+    job_name:
+      description: "Nombre del job en el pipeline consumidor"
+    stage:
+      description: "Stage donde correrá el job"
+      default: "render"
+    image_runner:
+      description: "Imagen Docker con Python"
+      default: ""
+    workload_path:
+      description: "Path al directorio del workload"
+    manifest_path:
+      description: "Path al manifest.yaml del workload"
+    output_path:
+      description: "Path al JSON con las policies leídas (consumido por render_tfvars)"
+      default: "cedar_policies.json"
+    environment:
+      description: "Ambiente destino"
+      default: "dev"
+---
+include:
+  - local: templates/includes/base/base_dominio_components.yml
+  - local: templates/includes/base/pull_python_scripts_dominio.yml
+
+"$[[ inputs.job_name ]]":
+  stage: $[[ inputs.stage ]]
+  image: $[[ inputs.image_runner ]]
+  variables:
+    COMPONENT_PY: apply_policy
+    ACTION: apply
+    WORKLOAD_PATH: $[[ inputs.workload_path ]]
+    MANIFEST_PATH: $[[ inputs.manifest_path ]]
+    OUTPUT_PATH: $[[ inputs.output_path ]]
+    ENVIRONMENT: $[[ inputs.environment ]]
+  script:
+    - !reference [.export_meta, script]
+    - !reference [.python_setup, script]
+    - !reference [.pull_python_scripts, script]
+    - python python_scripts/$COMPONENT_PY/$ACTION.py
+  artifacts:
+    paths:
+      - $[[ inputs.output_path ]]
+    expire_in: 7 days

@@ -1,0 +1,83 @@
+# pipeline_deploy_mcps.yml
+# Orquesta el despliegue de un MCP server desde AgentPlatform/mcp/{capability}/{name}.
+
+stages:
+  - validate
+  - package
+  - build
+  - scan
+  - secrets
+  - render
+  - deploy
+  - smoke
+
+include:
+  - local: rules/branch-to-env.yml
+  - local: rules/paths.yml
+  - local: variables/env-dev.yml
+  - local: variables/env-qa.yml
+  - local: variables/env-prd.yml
+
+  - component: $CI_SERVER_FQDN/Componentes/agentcore/validate_manifest@main
+    inputs:
+      job_name: validate-manifest
+      stage: validate
+      image_runner: $IMAGE_BASE
+      manifest_path: $WORKLOAD_PATH/manifest.yaml
+
+  - component: $CI_SERVER_FQDN/Componentes/agentcore/package_artifact@main
+    inputs:
+      job_name: package-artifact
+      stage: package
+      image_runner: $IMAGE_BASE
+      workload_path: $WORKLOAD_PATH
+      capability: $CAPABILITY
+      name: $WORKLOAD_NAME
+      kind: mcp
+      environment: $ENVIRONMENT
+      s3_bucket: $S3_ARTIFACTS_BUCKET_MCP
+
+  - component: $CI_SERVER_FQDN/Componentes/agentcore/build_image@main
+    inputs:
+      job_name: build-image
+      stage: build
+      image_runner: $IMAGE_BASE
+      workload_path: $WORKLOAD_PATH
+      ecr_repo: agentcore-mcp-${CAPABILITY}-${WORKLOAD_NAME}
+      dockerfile_path: config_files/build_image/mcp-server.Dockerfile
+      environment: $ENVIRONMENT
+
+  - component: $CI_SERVER_FQDN/Componentes/agentcore/upload_secret@main
+    inputs:
+      job_name: upload-oauth-secret
+      stage: secrets
+      image_runner: $IMAGE_BASE
+      secret_name: ${CAPABILITY}/${WORKLOAD_NAME}/oauth-client
+      value_var: OAUTH_CLIENT_SECRET
+      environment: $ENVIRONMENT
+
+  - component: $CI_SERVER_FQDN/Componentes/agentcore/render_tfvars@main
+    inputs:
+      job_name: render-tfvars
+      stage: render
+      image_runner: $IMAGE_BASE
+      manifest_path: $WORKLOAD_PATH/manifest.yaml
+      environment: $ENVIRONMENT
+
+  - component: $CI_SERVER_FQDN/Componentes/agentcore/trigger_iac@main
+    inputs:
+      job_name: trigger-iac
+      stage: deploy
+      image_runner: $IMAGE_BASE
+      target_project: $TARGET_IAC_PROJECT
+      environment: $ENVIRONMENT
+
+default:
+  tags: [devsecops-common]
+  interruptible: true
+
+workflow:
+  rules:
+    - !reference [.rule_branch_dev, rules]
+    - !reference [.rule_branch_qa, rules]
+    - !reference [.rule_branch_prd, rules]

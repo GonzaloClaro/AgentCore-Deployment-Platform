@@ -1,0 +1,30 @@
+# Plantilla de manifest para MCP server.
+
+apiVersion: v1
+kind: Workload
+metadata:
+  name: my-mcp
+  capability: my-capability
+  owner: team-example
+  description: "MCP server que expone tools X, Y, Z"
+  tags: [mcp]
+  kind: mcp
+
+spec:
+  composition: mcp-server
+
+  runtime:
+    entrypoint: mcp_server.py
+    env:
+      LOG_LEVEL: "INFO"
+
+  gateway_targets:
+    - gateway: oauth-3lo                # uno de los 3 default
+      tools_schema: ./openapi.yaml      # opcional: schema OpenAPI subido a S3 por el pipeline
+
+  observability:
+    enabled: true
+    dashboard: false
+
+  features:
+    enable_observability: true

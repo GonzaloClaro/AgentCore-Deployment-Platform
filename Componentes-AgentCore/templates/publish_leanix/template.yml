@@ -1,0 +1,46 @@
+spec:
+  inputs:
+    job_name:
+      description: "Nombre del job en el pipeline consumidor"
+    stage:
+      description: "Stage donde correrá el job"
+      default: "catalog"
+    image_runner:
+      description: "Imagen Docker con Python"
+      default: ""
+    manifests_glob:
+      description: "Glob de manifests a publicar (ej: agents/**/manifest.yaml)"
+      default: "**/manifest.yaml"
+    leanix_endpoint:
+      description: "URL base del API de LeanIX"
+    leanix_token_var:
+      description: "Nombre de la CI variable masked con el bearer token"
+      default: "LEANIX_API_TOKEN"
+    environment:
+      description: "Ambiente destino"
+      default: "prd"
+---
+include:
+  - local: templates/includes/base/base_dominio_components.yml
+  - local: templates/includes/base/pull_python_scripts_dominio.yml
+
+"$[[ inputs.job_name ]]":
+  stage: $[[ inputs.stage ]]
+  image: $[[ inputs.image_runner ]]
+  variables:
+    COMPONENT_PY: publish_leanix
+    ACTION: publish
+    MANIFESTS_GLOB: $[[ inputs.manifests_glob ]]
+    LEANIX_ENDPOINT: $[[ inputs.leanix_endpoint ]]
+    LEANIX_TOKEN_VAR: $[[ inputs.leanix_token_var ]]
+    ENVIRONMENT: $[[ inputs.environment ]]
+  script:
+    - !reference [.export_meta, script]
+    - !reference [.python_setup, script]
+    - !reference [.pull_python_scripts, script]
+    - python python_scripts/$COMPONENT_PY/$ACTION.py
+  artifacts:
+    when: always
+    paths:
+      - leanix_publish_report.json
+    expire_in: 30 days

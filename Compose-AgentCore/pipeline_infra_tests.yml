@@ -1,0 +1,79 @@
+# pipeline_infra_tests.yml
+# Tests del repo Infra-AgentCore. Trigger en MR que toque modules/ o compositions/.
+# Niveles: fmt + validate + test (con command=plan, sin AWS real).
+
+stages:
+  - lint
+  - validate
+  - test
+
+.tf_image:
+  image: hashicorp/terraform:1.7
+
+terraform-fmt:
+  extends: .tf_image
+  stage: lint
+  script:
+    - terraform fmt -check -recursive .
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - "modules/**/*"
+        - "compositions/**/*"
+        - "foundation/**/*"
+
+terraform-validate:
+  extends: .tf_image
+  stage: validate
+  script:
+    - |
+      set -e
+      for d in modules/*/ compositions/*/ foundation/*/; do
+        echo "→ validate $d"
+        (cd "$d" && terraform init -backend=false -input=false && terraform validate)
+      done
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - "modules/**/*"
+        - "compositions/**/*"
+        - "foundation/**/*"
+
+terraform-test-modules:
+  extends: .tf_image
+  stage: test
+  script:
+    - |
+      set -e
+      # Solo módulos que tengan tests/ definidos
+      for m in modules/runtime modules/runtime-role modules/gateway-policy; do
+        if [ -d "$m/tests" ]; then
+          echo "→ terraform test $m"
+          (cd "$m" && terraform init -backend=false -input=false && terraform test)
+        fi
+      done
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - "modules/**/*"
+
+terraform-test-compositions:
+  extends: .tf_image
+  stage: test
+  script:
+    - |
+      set -e
+      for c in compositions/agent-chatbot; do
+        if [ -d "$c/tests" ]; then
+          echo "→ terraform test $c"
+          (cd "$c" && terraform init -backend=false -input=false && terraform test)
+        fi
+      done
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - "compositions/**/*"
+
+default:
+  tags: [devsecops-common]
+  interruptible: true

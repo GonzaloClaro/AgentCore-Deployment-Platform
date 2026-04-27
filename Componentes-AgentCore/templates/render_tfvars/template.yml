@@ -1,0 +1,60 @@
+spec:
+  inputs:
+    job_name:
+      description: "Nombre del job en el pipeline consumidor"
+    stage:
+      description: "Stage donde correrá el job"
+      default: "render"
+    image_runner:
+      description: "Imagen Docker con Python"
+      default: ""
+    manifest_path:
+      description: "Path al manifest.yaml del workload"
+    env_defaults_path:
+      description: "Path al env-defaults.yaml del proyecto agentcore-{env}"
+      default: "env-defaults.yaml"
+    artifact_meta_path:
+      description: "Path al artifact_meta.json del job package_artifact"
+      default: "artifact_meta.json"
+    image_meta_path:
+      description: "Path al image_meta.json del job build_image"
+      default: "image_meta.json"
+    output_tfvars:
+      description: "Path de salida del tfvars JSON"
+      default: "terraform.auto.tfvars.json"
+    output_composition:
+      description: "Path de salida del composition_name.txt"
+      default: "composition_name.txt"
+    environment:
+      description: "Ambiente destino"
+      default: "dev"
+---
+include:
+  - local: templates/includes/base/base_dominio_components.yml
+  - local: templates/includes/base/pull_python_scripts_dominio.yml
+  - local: templates/includes/base/pull_config_files_dominio.yml
+
+"$[[ inputs.job_name ]]":
+  stage: $[[ inputs.stage ]]
+  image: $[[ inputs.image_runner ]]
+  variables:
+    COMPONENT_PY: render_tfvars
+    ACTION: render
+    MANIFEST_PATH: $[[ inputs.manifest_path ]]
+    ENV_DEFAULTS_PATH: $[[ inputs.env_defaults_path ]]
+    ARTIFACT_META_PATH: $[[ inputs.artifact_meta_path ]]
+    IMAGE_META_PATH: $[[ inputs.image_meta_path ]]
+    OUTPUT_TFVARS: $[[ inputs.output_tfvars ]]
+    OUTPUT_COMPOSITION: $[[ inputs.output_composition ]]
+    ENVIRONMENT: $[[ inputs.environment ]]
+  script:
+    - !reference [.export_meta, script]
+    - !reference [.python_setup, script]
+    - !reference [.pull_python_scripts, script]
+    - !reference [.pull_config_files, script]
+    - python python_scripts/$COMPONENT_PY/$ACTION.py
+  artifacts:
+    paths:
+      - $[[ inputs.output_tfvars ]]
+      - $[[ inputs.output_composition ]]
+    expire_in: 7 days

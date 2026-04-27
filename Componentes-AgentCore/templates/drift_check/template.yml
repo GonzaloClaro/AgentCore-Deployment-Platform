@@ -1,0 +1,52 @@
+spec:
+  inputs:
+    job_name:
+      description: "Nombre del job en el pipeline consumidor"
+    stage:
+      description: "Stage donde correrá el job"
+      default: "drift"
+    image_runner:
+      description: "Imagen Docker con Python + boto3"
+      default: ""
+    plan_output_path:
+      description: "Path al output de 'terraform plan -detailed-exitcode -out=plan.binary'"
+      default: "plan.binary"
+    plan_json_path:
+      description: "Path al output de 'terraform show -json plan.binary'"
+      default: "plan.json"
+    sns_topic_arn:
+      description: "Topic SNS al que publicar alerta de drift. Vacío = solo log."
+      default: ""
+    severity_threshold:
+      description: "low | medium | high | critical → solo alerta si >= threshold"
+      default: "medium"
+    environment:
+      description: "Ambiente"
+      default: "dev"
+---
+include:
+  - local: templates/includes/base/base_dominio_components.yml
+  - local: templates/includes/base/pull_python_scripts_dominio.yml
+
+"$[[ inputs.job_name ]]":
+  stage: $[[ inputs.stage ]]
+  image: $[[ inputs.image_runner ]]
+  variables:
+    COMPONENT_PY: drift_check
+    ACTION: check
+    PLAN_OUTPUT_PATH: $[[ inputs.plan_output_path ]]
+    PLAN_JSON_PATH: $[[ inputs.plan_json_path ]]
+    SNS_TOPIC_ARN: $[[ inputs.sns_topic_arn ]]
+    SEVERITY_THRESHOLD: $[[ inputs.severity_threshold ]]
+    ENVIRONMENT: $[[ inputs.environment ]]
+  script:
+    - !reference [.export_meta, script]
+    - !reference [.python_setup, script]
+    - !reference [.aws_auth, script]
+    - !reference [.pull_python_scripts, script]
+    - python python_scripts/$COMPONENT_PY/check.py
+  artifacts:
+    when: always
+    paths:
+      - drift_report.json
+    expire_in: 30 days
