@@ -1,0 +1,3 @@
+# Fase 0: el template usa solo stdlib (mantiene el zip pequeño).
+# Si tu agente real necesita Bedrock, descomentar:
+# boto3==1.35.0

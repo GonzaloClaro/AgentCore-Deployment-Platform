@@ -1,0 +1,35 @@
+# Infra-AgentCore CI — solo valida sintaxis y schema HCL.
+# NO hace plan/apply (eso vive en los pipelines de los deployables iac/AgentCore/agentcore-{dev,qa,prd}).
+# Objetivo: detectar errores de HCL/provider antes de mergear a main.
+
+stages:
+  - check
+
+variables:
+  # Pinear a una versión específica de Terraform para reproducibilidad CI ↔ runner.
+  # Ajustar al binary que use el runner productivo (Componentes/Compose/agentcore/pipeline_infra.yml).
+  TERRAFORM_VERSION: "1.9.8"
+
+.terraform-base:
+  stage: check
+  image: hashicorp/terraform:${TERRAFORM_VERSION}
+  before_script:
+    - terraform version
+
+tf-fmt-check:
+  extends: .terraform-base
+  script:
+    - terraform fmt -check -recursive .
+
+tf-validate:
+  extends: .terraform-base
+  script:
+    - apk add --no-cache bash
+    - bash scripts/tf-check.sh
+  cache:
+    # Cachear los providers descargados (~70MB de hashicorp/aws). Sin cache, cada CI
+    # baja el provider en cada subdir → ~10x más lento.
+    key: terraform-providers-${TERRAFORM_VERSION}
+    paths:
+      - "**/.terraform/"
+      - "**/.terraform.lock.hcl"

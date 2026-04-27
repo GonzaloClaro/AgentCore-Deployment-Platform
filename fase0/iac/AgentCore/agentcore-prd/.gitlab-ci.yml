@@ -1,0 +1,33 @@
+# agentcore-prd/.gitlab-ci.yml
+# Deployable downstream para AgentCore en cuenta PRD.
+# Disparado por el componente trigger_iac desde AgentPlatform/Compose-AgentCore.
+
+include:
+  - project: agentcore-platform/Componentes/Compose/agentcore
+    ref: main
+    file: pipeline_infra.yml
+
+variables:
+  # Recibidas via trigger:
+  #   - COMPOSITION_NAME (del manifest)
+  #   - TFVARS_JSON     (terraform.auto.tfvars.json renderizado)
+  #   - INFRA_REF       (tag de infra-agentcore a usar)
+  #   - UPSTREAM_PROJECT, UPSTREAM_PIPELINE_ID
+  ENVIRONMENT: "prd"
+  AWS_REGION: "us-east-1"
+  ORG_RUNNER_IMAGE: "$ORG_RUNNER_IMAGE"
+
+# Job que clona compositions/{COMPOSITION_NAME} desde infra-agentcore en el ref especificado
+# y prepara el directorio de trabajo para los jobs del pipeline_infra.yml.
+.prepare:
+  before_script:
+    - mkdir -p compositions
+    - >
+      git clone --depth 1 --branch "${INFRA_REF}"
+      "https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/agentcore-platform/iac/AgentCore/infra-agentcore.git"
+      /tmp/infra
+    - cp -r /tmp/infra/compositions/${COMPOSITION_NAME} compositions/${COMPOSITION_NAME}
+    - cp -r /tmp/infra/modules modules
+    - echo "${TFVARS_JSON}" > compositions/${COMPOSITION_NAME}/terraform.auto.tfvars.json
+    # Inyectar env-defaults locales como auto.tfvars
+    - cp env-defaults.yaml compositions/${COMPOSITION_NAME}/env-defaults.yaml

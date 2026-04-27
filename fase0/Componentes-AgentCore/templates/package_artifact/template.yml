@@ -1,0 +1,51 @@
+spec:
+  inputs:
+    job_name:
+      description: "Nombre del job en el pipeline consumidor"
+    stage:
+      description: "Stage donde correrá el job"
+      default: "package"
+    image_runner:
+      description: "Imagen Docker para el job"
+      default: ""
+    workload_path:
+      description: "Path al directorio del workload (ej: agents/customer-support/chatbot-tier1)"
+    capability:
+      description: "Capability del workload"
+    name:
+      description: "Nombre del workload"
+    kind:
+      description: "Tipo de workload (agents|mcp|tools)"
+      default: "agents"
+    environment:
+      description: "Ambiente destino"
+      default: "dev"
+    s3_bucket:
+      description: "Bucket S3 destino (resuelto desde env-defaults)"
+---
+include:
+  - local: templates/includes/base/base_dominio_components.yml
+  - local: templates/includes/base/pull_python_scripts_dominio.yml
+
+"$[[ inputs.job_name ]]":
+  stage: $[[ inputs.stage ]]
+  image: $[[ inputs.image_runner ]]
+  variables:
+    COMPONENT_PY: package_artifact
+    ACTION: package
+    WORKLOAD_PATH: $[[ inputs.workload_path ]]
+    CAPABILITY: $[[ inputs.capability ]]
+    WORKLOAD_NAME: $[[ inputs.name ]]
+    KIND: $[[ inputs.kind ]]
+    ENVIRONMENT: $[[ inputs.environment ]]
+    S3_BUCKET: $[[ inputs.s3_bucket ]]
+  script:
+    - !reference [.export_meta, script]
+    - !reference [.python_setup, script]
+    - !reference [.aws_auth, script]
+    - !reference [.pull_python_scripts, script]
+    - python python_scripts/$COMPONENT_PY/$ACTION.py
+  artifacts:
+    paths:
+      - artifact_meta.json
+    expire_in: 7 days

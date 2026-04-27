@@ -1,0 +1,44 @@
+spec:
+  inputs:
+    job_name:
+      description: "Nombre del job en el pipeline consumidor"
+    stage:
+      description: "Stage donde correrá el job"
+      default: "publish-prompts"
+    image_runner:
+      description: "Imagen Docker con boto3"
+      default: ""
+    prompts_dir:
+      description: "Directorio con los YAML de prompts del workload"
+    workload_name:
+      description: "Nombre del workload (prefijo de los prompts en Bedrock)"
+    capability:
+      description: "Capability del workload"
+    environment:
+      description: "Ambiente destino"
+      default: "dev"
+---
+include:
+  - local: templates/includes/base/base_dominio_components.yml
+  - local: templates/includes/base/pull_python_scripts_dominio.yml
+
+"$[[ inputs.job_name ]]":
+  stage: $[[ inputs.stage ]]
+  image: $[[ inputs.image_runner ]]
+  variables:
+    COMPONENT_PY: publish_prompt
+    ACTION: publish
+    PROMPTS_DIR: $[[ inputs.prompts_dir ]]
+    WORKLOAD_NAME: $[[ inputs.workload_name ]]
+    CAPABILITY: $[[ inputs.capability ]]
+    ENVIRONMENT: $[[ inputs.environment ]]
+  script:
+    - !reference [.export_meta, script]
+    - !reference [.python_setup, script]
+    - !reference [.aws_auth, script]
+    - !reference [.pull_python_scripts, script]
+    - python python_scripts/$COMPONENT_PY/$ACTION.py
+  artifacts:
+    paths:
+      - prompt_arns.json
+    expire_in: 7 days

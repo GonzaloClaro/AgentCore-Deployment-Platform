@@ -1,0 +1,15 @@
+# AgentPlatform/.gitlab-ci.yml (fase 0)
+# Trigger al pipeline de deploy_agents cuando cambian agents/**.
+# Sin pipeline_deploy_mcps (no hay MCP en fase 0) ni pipeline_catalog (sin LeanIX).
+
+include:
+  # Pipeline de despliegue de agentes (cuando cambian agents/**)
+  - project: agentcore-platform/Componentes/Compose/agentcore
+    ref: main
+    file: pipeline_deploy_agents.yml
+    rules:
+      - changes:
+          - "agents/**/*"
+
+variables:
+  ORG_RUNNER_IMAGE: "$ORG_RUNNER_IMAGE"

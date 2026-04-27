@@ -21,7 +21,7 @@ Lee en este orden:
 
 ### Si eres **dev de un equipo consumidor**
 Lee en este orden:
-1. `MANIFEST_REFERENCE.md` (raíz del repo) — qué puedes configurar en tu workload.
+1. `MANIFEST_REFERENCE.md` (en esta carpeta) — qué puedes configurar en tu workload.
 2. **[03_INDEX_GLOSSARY.md](./03_INDEX_GLOSSARY.md)** — tabla "quiero hacer X → archivo Y".
 3. `AgentPlatform/agents/_template/` — plantilla copy/paste de tu primer agente.
 4. **[05_FLOWS_AND_DIAGRAMS.md](./05_FLOWS_AND_DIAGRAMS.md)** — qué pasa cuando haces push.
@@ -30,15 +30,15 @@ Lee en este orden:
 Lee en este orden:
 1. **[08_TUTORIAL_DEVOPS.md](./08_TUTORIAL_DEVOPS.md)** — tutorial completo de operación, desde bootstrap hasta troubleshooting.
 2. **[07_QUOTAS.md](./07_QUOTAS.md)** — cuotas, sharding, capacity planning.
-3. `MULTI_ACCOUNT.md` (raíz) — cómo agregar cuenta nueva.
-4. `RUNBOOK_DESTROY_PRD.md` (raíz) — destroys en PRD.
+3. `MULTI_ACCOUNT.md` (en esta carpeta) — cómo agregar cuenta nueva.
+4. `RUNBOOK_DESTROY_PRD.md` (en esta carpeta) — destroys en PRD.
 5. **[04_ARCHITECTURE_COMPONENTS.md](./04_ARCHITECTURE_COMPONENTS.md)** §"Foundation" y §"Deployables".
 
 ### Si eres **Seguridad / Compliance**
 Lee en este orden:
 1. **[06_EXECUTIVE_OVERVIEW.md](./06_EXECUTIVE_OVERVIEW.md)** §"Compromisos requeridos por área" → "Seguridad".
 2. **[05_FLOWS_AND_DIAGRAMS.md](./05_FLOWS_AND_DIAGRAMS.md)** §7 (Cedar policies) y §10 (Destroy en PRD).
-3. `RUNBOOK_DESTROY_PRD.md` (raíz).
+3. `RUNBOOK_DESTROY_PRD.md` (en esta carpeta).
 4. `MANIFEST_REFERENCE.md` §3.bis (Cedar) y §3.ter (IAM runtime).
 
 ### Si eres **FinOps**

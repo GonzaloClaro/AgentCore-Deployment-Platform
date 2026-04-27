@@ -1,0 +1,34 @@
+# branch-to-env.yml
+# Mapea branch → ENVIRONMENT + AWS_ROLE_ARN. Reusable con !reference.
+
+.rule_branch_dev:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      variables:
+        ENVIRONMENT: "dev"
+        AWS_ROLE_ARN: "$AWS_ROLE_ARN_DEV"
+        TARGET_IAC_PROJECT: "iac/AgentCore/agentcore-dev"
+
+.rule_branch_qa:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "qa"'
+      when: manual
+      variables:
+        ENVIRONMENT: "qa"
+        AWS_ROLE_ARN: "$AWS_ROLE_ARN_QA"
+        TARGET_IAC_PROJECT: "iac/AgentCore/agentcore-qa"
+
+.rule_branch_prd:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
+      when: manual
+      variables:
+        ENVIRONMENT: "prd"
+        AWS_ROLE_ARN: "$AWS_ROLE_ARN_PRD"
+        TARGET_IAC_PROJECT: "iac/AgentCore/agentcore-prd"
+
+.rule_any_env:
+  rules:
+    - !reference [.rule_branch_dev, rules]
+    - !reference [.rule_branch_qa, rules]
+    - !reference [.rule_branch_prd, rules]

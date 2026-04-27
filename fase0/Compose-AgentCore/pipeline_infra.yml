@@ -1,0 +1,110 @@
+# pipeline_infra.yml
+# Pipeline downstream que corre Terraform en agentcore-{dev,qa,prd}.
+# Disparado por trigger_iac desde el pipeline upstream.
+
+stages:
+  - init
+  - plan
+  - apply
+  - smoke
+
+include:
+  - local: variables/env-dev.yml
+  - local: variables/env-qa.yml
+  - local: variables/env-prd.yml
+  - local: rules/approvals.yml
+
+variables:
+  TF_ROOT: "compositions/${COMPOSITION_NAME}"
+  TF_STATE_NAME: "agentcore-${ENVIRONMENT}-${COMPOSITION_NAME}-${UPSTREAM_PROJECT}"
+
+.tf_image:
+  image: hashicorp/terraform:1.7
+
+terraform-init:
+  extends: .tf_image
+  stage: init
+  script:
+    - echo "$TFVARS_JSON" > terraform.auto.tfvars.json
+    - cd "$TF_ROOT"
+    - terraform init
+      -backend-config="address=${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/terraform/state/${TF_STATE_NAME}"
+      -backend-config="lock_address=${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/terraform/state/${TF_STATE_NAME}/lock"
+      -backend-config="unlock_address=${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/terraform/state/${TF_STATE_NAME}/lock"
+      -backend-config="username=gitlab-ci-token"
+      -backend-config="password=${CI_JOB_TOKEN}"
+      -backend-config="lock_method=POST"
+      -backend-config="unlock_method=DELETE"
+      -backend-config="retry_wait_min=5"
+
+terraform-plan:
+  extends: .tf_image
+  stage: plan
+  needs: [terraform-init]
+  script:
+    - cd "$TF_ROOT"
+    - terraform plan -out=plan.tfplan
+    # Detectar destroys → exportar flag para guard del apply
+    - terraform show -json plan.tfplan > plan.json
+    - |
+      DESTROY_COUNT=$(jq '[.resource_changes[]? | select(.change.actions | contains(["delete"]))] | length' plan.json)
+      echo "PLAN_DESTROY_COUNT=$DESTROY_COUNT" >> destroy.env
+      if [ "$DESTROY_COUNT" -gt 0 ]; then
+        echo "⚠️  PLAN incluye $DESTROY_COUNT destroy(s). Lista:"
+        jq -r '.resource_changes[]? | select(.change.actions | contains(["delete"])) | "  - \(.address) (\(.change.actions | join(",")))"' plan.json
+      fi
+  artifacts:
+    paths:
+      - $TF_ROOT/plan.tfplan
+      - $TF_ROOT/plan.json
+    reports:
+      dotenv: $TF_ROOT/destroy.env
+    expire_in: 1 day
+
+# Guard adicional: en PRD, si el plan tiene cualquier destroy, requiere job manual extra
+# de "destroy approval" SEPARADO del apply normal. Esto cambia la UX del approver:
+# para destroys en PRD hay que clickear DOS jobs distintos, uno con label "DESTROY APPROVAL".
+prd-destroy-acknowledge:
+  extends: .tf_image
+  stage: apply
+  needs: [terraform-plan]
+  rules:
+    - if: '$ENVIRONMENT == "prd" && $PLAN_DESTROY_COUNT != "0" && $PLAN_DESTROY_COUNT != ""'
+      when: manual
+      allow_failure: false
+  script:
+    - echo "✅ Destroy approval acknowledged for PRD"
+    - echo "PLAN_DESTROY_COUNT=$PLAN_DESTROY_COUNT"
+
+terraform-apply:
+  extends: .tf_image
+  stage: apply
+  needs:
+    - terraform-plan
+    # En PRD con destroys, además requerir el ack manual previo
+    - job: prd-destroy-acknowledge
+      optional: true
+  rules:
+    - !reference [.manual_qa, rules]
+    - !reference [.manual_prd, rules]
+    - if: '$ENVIRONMENT == "dev"'
+      when: on_success
+  script:
+    - cd "$TF_ROOT"
+    - terraform apply -auto-approve plan.tfplan
+    - terraform output -json > tf_outputs.json
+  artifacts:
+    paths:
+      - $TF_ROOT/tf_outputs.json
+
+smoke-after-apply:
+  stage: smoke
+  needs: [terraform-apply]
+  image: $IMAGE_BASE
+  script:
+    - export RUNTIME_ARN=$(jq -r '.agent_runtime_alias_arn.value // .agent_runtime_arn.value' "$TF_ROOT/tf_outputs.json")
+    - echo "[smoke] runtime=$RUNTIME_ARN"
+    - aws bedrock-agentcore invoke-agent-runtime --agent-runtime-arn "$RUNTIME_ARN" --payload '{"prompt":"ping"}' /dev/stdout
+
+default:
+  tags: [devsecops-common]

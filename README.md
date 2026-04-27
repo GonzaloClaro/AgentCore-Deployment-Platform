@@ -62,11 +62,11 @@ Un sistema completo de deployment para agentes de IA pensado como **5 repos lóg
 |-----|-----------|
 | **[`docs/resumen.md`](docs/resumen.md)** | **Comienza aquí**: explicación end-to-end de los 5 repos y el flujo de despliegue |
 | **[`docs/08_TUTORIAL_DEVOPS.md`](docs/08_TUTORIAL_DEVOPS.md)** | Tutorial paso a paso para el equipo de plataforma: bootstrap, primer agente, troubleshooting, operación diaria |
-| [`PLAN.md`](PLAN.md) | Roadmap por fases del proyecto |
-| [`MANIFEST_REFERENCE.md`](MANIFEST_REFERENCE.md) | Schema completo del manifest opinado |
-| [`MULTI_ACCOUNT.md`](MULTI_ACCOUNT.md) | Setup multi-cuenta AWS (dev/qa/prd) |
-| [`CI_VARIABLES.md`](CI_VARIABLES.md) | Variables CI/CD requeridas |
-| [`RUNBOOK_DESTROY_PRD.md`](RUNBOOK_DESTROY_PRD.md) | Procedimiento de destroy en PRD |
+| [`PLAN.md`](docs/PLAN.md) | Roadmap por fases del proyecto |
+| [`MANIFEST_REFERENCE.md`](docs/MANIFEST_REFERENCE.md) | Schema completo del manifest opinado |
+| [`MULTI_ACCOUNT.md`](docs/MULTI_ACCOUNT.md) | Setup multi-cuenta AWS (dev/qa/prd) |
+| [`CI_VARIABLES.md`](docs/CI_VARIABLES.md) | Variables CI/CD requeridas |
+| [`RUNBOOK_DESTROY_PRD.md`](docs/RUNBOOK_DESTROY_PRD.md) | Procedimiento de destroy en PRD |
 | [`docs/01_IMPROVEMENTS_AND_FUTURE_WORK.md`](docs/01_IMPROVEMENTS_AND_FUTURE_WORK.md) | Backlog de mejoras priorizado por disparador |
 | [`docs/04_ARCHITECTURE_COMPONENTS.md`](docs/04_ARCHITECTURE_COMPONENTS.md) | Componentes de la arquitectura |
 | [`docs/05_FLOWS_AND_DIAGRAMS.md`](docs/05_FLOWS_AND_DIAGRAMS.md) | Diagramas de flujo |
