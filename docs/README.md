@@ -15,22 +15,24 @@ Lee en este orden:
 1. **[04_ARCHITECTURE_COMPONENTS.md](./04_ARCHITECTURE_COMPONENTS.md)** — entender el modelo mental.
 2. **[03_INDEX_GLOSSARY.md](./03_INDEX_GLOSSARY.md)** — saber dónde está cada cosa.
 3. **[02_PHASED_IMPLEMENTATION_PLAN.md](./02_PHASED_IMPLEMENTATION_PLAN.md)** — qué construir y cuándo.
-4. **[01_IMPROVEMENTS_AND_FUTURE_WORK.md](./01_IMPROVEMENTS_AND_FUTURE_WORK.md)** — backlog priorizado.
-5. **[05_FLOWS_AND_DIAGRAMS.md](./05_FLOWS_AND_DIAGRAMS.md)** — flujos productivos y troubleshooting.
+4. **[08_TUTORIAL_DEVOPS.md](./08_TUTORIAL_DEVOPS.md)** — paso a paso de operación de la plataforma.
+5. **[01_IMPROVEMENTS_AND_FUTURE_WORK.md](./01_IMPROVEMENTS_AND_FUTURE_WORK.md)** — backlog priorizado.
+6. **[05_FLOWS_AND_DIAGRAMS.md](./05_FLOWS_AND_DIAGRAMS.md)** — flujos productivos y troubleshooting.
 
-### Si eres **dev de un equipo consumidor (equipo central de IA, equipo consumidor)**
+### Si eres **dev de un equipo consumidor**
 Lee en este orden:
 1. `MANIFEST_REFERENCE.md` (raíz del repo) — qué puedes configurar en tu workload.
 2. **[03_INDEX_GLOSSARY.md](./03_INDEX_GLOSSARY.md)** — tabla "quiero hacer X → archivo Y".
 3. `AgentPlatform/agents/_template/` — plantilla copy/paste de tu primer agente.
 4. **[05_FLOWS_AND_DIAGRAMS.md](./05_FLOWS_AND_DIAGRAMS.md)** — qué pasa cuando haces push.
 
-### Si eres **CloudOps**
+### Si eres **CloudOps / DevOps de plataforma**
 Lee en este orden:
-1. **[07_QUOTAS.md](./07_QUOTAS.md)** — cuotas, sharding, capacity planning.
-2. `MULTI_ACCOUNT.md` (raíz) — cómo agregar cuenta nueva.
-3. `RUNBOOK_DESTROY_PRD.md` (raíz) — destroys en PRD.
-4. **[04_ARCHITECTURE_COMPONENTS.md](./04_ARCHITECTURE_COMPONENTS.md)** §"Foundation" y §"Deployables".
+1. **[08_TUTORIAL_DEVOPS.md](./08_TUTORIAL_DEVOPS.md)** — tutorial completo de operación, desde bootstrap hasta troubleshooting.
+2. **[07_QUOTAS.md](./07_QUOTAS.md)** — cuotas, sharding, capacity planning.
+3. `MULTI_ACCOUNT.md` (raíz) — cómo agregar cuenta nueva.
+4. `RUNBOOK_DESTROY_PRD.md` (raíz) — destroys en PRD.
+5. **[04_ARCHITECTURE_COMPONENTS.md](./04_ARCHITECTURE_COMPONENTS.md)** §"Foundation" y §"Deployables".
 
 ### Si eres **Seguridad / Compliance**
 Lee en este orden:
@@ -65,6 +67,8 @@ Lee en este orden:
 | 5 | [05_FLOWS_AND_DIAGRAMS.md](./05_FLOWS_AND_DIAGRAMS.md) | Devs, SRE | largo | 10 flujos críticos con diagramas Mermaid |
 | 6 | [06_EXECUTIVE_OVERVIEW.md](./06_EXECUTIVE_OVERVIEW.md) | Dirección, sponsors | largo | Por qué el enfoque + compromisos + futuro descentralizado |
 | 7 | [07_QUOTAS.md](./07_QUOTAS.md) | CloudOps, FinOps, Tech Lead | largo | Quotas AgentCore + escenarios + sharding |
+| 8 | [08_TUTORIAL_DEVOPS.md](./08_TUTORIAL_DEVOPS.md) | DevOps / Platform Engineers | largo | Tutorial paso a paso de operación: bootstrap, primer agente, troubleshooting, día a día |
+| - | [resumen.md](./resumen.md) | Todos | mediano | Vista global: 5 repos, modules + compositions, flujo end-to-end |
 
 ## Otros docs en la raíz del proyecto
 
