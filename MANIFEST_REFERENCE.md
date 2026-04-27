@@ -283,7 +283,7 @@ spec:
 
 ## 3.ops. Observabilidad y robustez operacional
 
-Para banco con cientos de agentes, el pipeline tiene 4 capas de protección:
+Para una organización con cientos de agentes, el pipeline tiene 4 capas de protección:
 
 ### Capa 1: Trace ID cross-pipeline (`pipeline_telemetry`)
 

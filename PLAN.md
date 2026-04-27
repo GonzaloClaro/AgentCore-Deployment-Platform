@@ -4,7 +4,7 @@
 
 ## Context
 
-La organización tiene 3 cuentas AWS (`dev-agenticplatform`, `qa-agenticplatform`, `prd-agenticplatform`) y necesita una plataforma interna que permita a comunidades subir agentes IA, MCP servers y tools a Bedrock AgentCore con gobierno fuerte y mínima fricción para devs.
+La organización tiene 3 cuentas AWS (`dev-agenticplatform`, `qa-agenticplatform`, `prd-agenticplatform`) y necesita una plataforma interna que permita a equipos subir agentes IA, MCP servers y tools a Bedrock AgentCore con gobierno fuerte y mínima fricción para devs.
 
 **Problema:** sin estandarización, cada equipo inventaría su propio Terraform y CI/CD, fragmentando seguridad, IAM, secretos y catálogo.
 
@@ -26,7 +26,7 @@ Este plan respeta los lineamientos internos del framework (los críticos están 
 | 🟡 Branching `main` + `feat/***` | Componentes y Compose usan este modelo. Workloads usan `dev/qa/main` por requisito de promoción. |
 | 🟡 README obligatorio | Cada repo tiene `README.md` con descripción, estructura, tabla de inputs, ejemplo de uso. |
 | 🟡 Secrets como CI/CD vars protegidas/enmascaradas | OAuth Client ID/Secret nunca en código ni tfvars. |
-| 🟡 Versionado al consumir: `@main`, SHA, tag, branch, `~latest` | Compose puede pinear `@v1.x.y` o `@main`. |
+| 🟡 Versionado al consumir: `@main`, SHA, tag, branch, `~latest` | Compose puede fijar `@v1.x.y` o `@main`. |
 | 🟢 Reutilizar con `!reference` y `extends` interno | Bloques compartidos en `templates/includes/base/`. |
 | 🟢 Patrón `pull_python_scripts_dominio.yml` | Existe en `templates/includes/base/` para descargar scripts al runner del compose. |
 

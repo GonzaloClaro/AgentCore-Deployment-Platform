@@ -84,7 +84,7 @@ Aparece el segundo equipo queriendo desplegar su agente.
 
 ## Fase 2 — Multi-team handoff (semanas 5-6)
 
-**Objetivo:** múltiples comunidades usan la plataforma sin conflictos.
+**Objetivo:** múltiples equipos usan la plataforma sin conflictos.
 
 ### Scope
 - Composition `agent-chatbot` (runtime + memory + observability).
@@ -348,7 +348,7 @@ Cada uno requiere ~1 quarter de exploración + 1-2 quarters de implementación.
 
 ## Reglas de transición entre fases
 
-- **Retrospectiva al final de cada fase** con stakeholders consumidores (CoE de IA, equipos comunidades).
+- **Retrospectiva al final de cada fase** con stakeholders consumidores (equipo central de IA, equipos consumidores).
 - **Las decisiones de la fase siguiente se toman al inicio de esa fase**, no al inicio del proyecto. Las prioridades cambian con la realidad.
 - **Skipear capacidades no disparadas.** Si en Fase 6 no hay caso real para Cedar, postergarlo hasta que aparezca.
 - **Documentar la deuda técnica aceptada** explícitamente en cada fase (ej: "Fase 1 acepta hardcoded model_id").

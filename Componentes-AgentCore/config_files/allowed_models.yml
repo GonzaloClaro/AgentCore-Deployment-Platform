@@ -46,7 +46,7 @@ bedrock:
   - id: "meta.llama3-2-90b-instruct-v1:0"
     display_name: "Llama 3.2 90B Instruct"
     environments: [dev, qa]
-    notes: "Open-weight. Solo dev/qa hasta validar fitness en use cases del banco."
+    notes: "Open-weight. Solo dev/qa hasta validar fitness en use cases de la organización."
 
   # Cross-region inference profiles (recomendado para PRD por throughput garantizado)
   - id: "us.anthropic.claude-3-5-sonnet-20241022-v2:0"

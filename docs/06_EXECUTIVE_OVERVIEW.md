@@ -113,7 +113,7 @@ Esta plataforma **NO es viable** sin compromisos formales de las siguientes áre
 - Costo mensual por agente productivo dentro de banda objetivo.
 - Reportes mensuales de uso de tokens por modelo a stakeholders.
 
-### 3.6 CoE de IA / Comunidades de práctica
+### 3.6 equipo central de IA / Equipos consumidores
 
 **Compromiso (estos son los CONSUMIDORES de la plataforma, no operadores):**
 - Adoptar la plataforma como camino estándar (no construir alternativas paralelas).
@@ -124,7 +124,7 @@ Esta plataforma **NO es viable** sin compromisos formales de las siguientes áre
 
 ### 3.7 Equipo de Plataforma (NUEVO — clave)
 
-**Este equipo NO existe aún en la mayoría de organizaciones y debe crearse explícitamente.** Es **distinto al CoE de IA** — el CoE construye agentes, este equipo construye la plataforma sobre la cual los agentes se construyen.
+**Este equipo NO existe aún en la mayoría de organizaciones y debe crearse explícitamente.** Es **distinto al equipo central de IA** — el equipo central de IA construye agentes, este equipo construye la plataforma sobre la cual los agentes se construyen.
 
 **Composición mínima recomendada:**
 
@@ -133,7 +133,7 @@ Esta plataforma **NO es viable** sin compromisos formales de las siguientes áre
 | **Tech Lead** | 1 | Senior, orquesta el equipo, decide arquitectura, hace tradeoffs técnicos. Idealmente con experiencia en Platform Engineering en organizaciones reguladas. |
 | **DevOps senior** | 1-2 | Fuerte en GitLab CI, Terraform, AWS. Responsable de la robustez del pipeline. |
 | **Ingenieros de IA / AgentCore** | 1-2 | Conocimiento profundo de Bedrock AgentCore, sus quirks, sus límites. Acompañan a equipos consumidores en casos complejos. |
-| **Product Manager / Owner transversal** | 1 | Conoce los procesos del banco de punta a punta. Destraba burocracias entre áreas. Prioriza el backlog del equipo. Crítico para que la plataforma no se atasque políticamente. |
+| **Product Manager / Owner transversal** | 1 | Conoce los procesos de la organización de punta a punta. Destraba burocracias entre áreas. Prioriza el backlog del equipo. Crítico para que la plataforma no se atasque políticamente. |
 | **(opcional) SRE** | 0-1 | Cuando la plataforma supere 50+ agentes en PRD. Operación de telemetría, drift, alertas. |
 
 **Tamaño total**: 4-7 personas. Este equipo es full-time dedicado a la plataforma. Sin ese commitment, la plataforma se atrofia en 6-12 meses.
@@ -150,11 +150,11 @@ Esta plataforma **NO es viable** sin compromisos formales de las siguientes áre
 
 ## 4. Camino hacia IA descentralizada
 
-Este framework es una **base correcta para transicionar a un esquema de IA descentralizado** donde no todo corra en las 3 cuentas centrales del CoE. Eso ocurrirá inevitablemente cuando:
+Este framework es una **base correcta para transicionar a un esquema de IA descentralizado** donde no todo corra en las 3 cuentas centrales del equipo central. Eso ocurrirá inevitablemente cuando:
 
 - Distintas business units tengan compliance / data residency / regulatorio diferenciados.
 - Las quotas centrales se vuelvan limitantes a pesar del sharding.
-- Algunas BUs quieran su propio ciclo de innovación sin pasar por el CoE.
+- Algunas BUs quieran su propio ciclo de innovación sin pasar por el equipo central de IA.
 
 ### Cómo el framework habilita la descentralización
 
@@ -220,7 +220,7 @@ Con un CLI bien diseñado:
 
 2. **Dependencia fuerte del equipo de plataforma.**
    - Si el equipo se desmantela o pierde personas clave, la plataforma se atrofia rápido.
-   - **Mitigación:** documentación exhaustiva, redundancia de roles, rotación entre equipo de plataforma y CoE de IA.
+   - **Mitigación:** documentación exhaustiva, redundancia de roles, rotación entre equipo de plataforma y equipo central de IA.
 
 3. **Provider AWS Terraform inmaduro para AgentCore.**
    - AgentCore es un servicio nuevo (2025-2026). Recursos como `policy_engine` aún no existen en el provider; usamos workarounds `local-exec`.
@@ -242,7 +242,7 @@ Con un CLI bien diseñado:
 2. **"Mi equipo no puede esperar a la Fase X"** — algún equipo querrá Cedar policies o sharding antes de la Fase prevista.
    - **Mitigación:** roadmap claro, comunicación frecuente, capacidad de adelantar fases si hay business case fuerte.
 
-3. **"Voy a buildar mi propia plataforma porque la del CoE no me sirve"** — fragmentación organizacional.
+3. **"Voy a buildar mi propia plataforma porque la del equipo central no me sirve"** — fragmentación organizacional.
    - **Mitigación:** trabajo proactivo de evangelización, métricas visibles de adopción, comunicación ejecutiva del compromiso con la plataforma única.
 
 ### Limitaciones técnicas conocidas
@@ -266,9 +266,9 @@ Con un CLI bien diseñado:
 - Accesos: managed policies + IdP + emergency role.
 - Seguridad: thresholds + drift response + Cedar review.
 - FinOps: whitelist modelos + dashboards de costo.
-- CoE de IA: adopción de la plataforma como camino estándar.
+- equipo central de IA: adopción de la plataforma como camino estándar.
 
-**Qué requiere crearse explícitamente:** un **equipo de plataforma de 4-7 personas** distinto al CoE, con DevOps senior + ingenieros de IA + Product Manager transversal + Tech Lead. Sin este equipo, la inversión se pierde.
+**Qué requiere crearse explícitamente:** un **equipo de plataforma de 4-7 personas** distinto al equipo central, con DevOps senior + ingenieros de IA + Product Manager transversal + Tech Lead. Sin este equipo, la inversión se pierde.
 
 **Cuándo veremos valor:** Fase 1 (8 semanas) entrega el primer agente desplegado en DEV. Fase 4 (semana 16) tenemos PRD operativo. Fase 7 (semana 24) escalamos horizontalmente con sharding.
 

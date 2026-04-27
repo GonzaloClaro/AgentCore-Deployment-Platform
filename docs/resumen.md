@@ -19,7 +19,7 @@ Documento educativo sobre cómo está organizado el sistema de despliegue de age
 
 ## 1. Visión general
 
-El sistema está dividido en 5 repos GitLab, cada uno con un rol específico. Esta separación no es estética: cada repo tiene un **ciclo de vida** y un **owner** distintos, y mezclarlos romperia las garantías de seguridad o auditoría.
+El sistema está dividido en 5 repos GitLab, cada uno con un rol específico. Esta separación no es estética: cada repo tiene un **ciclo de vida** y un **owner** distintos, y mezclarlos rompería las garantías de seguridad o auditoría.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
@@ -36,7 +36,7 @@ El sistema está dividido en 5 repos GitLab, cada uno con un rol específico. Es
 │         │                                                                 │
 │         ▼ multi-project trigger                                           │
 │  iac/AgentCore/agentcore-{dev|qa|prd}  (deployables — terraform state)   │
-│  └─ clona Infra-AgentCore en el tag pinneado, corre terraform apply      │
+│  └─ clona Infra-AgentCore en el tag fijado, corre terraform apply      │
 │         │                                                                 │
 │         ▼ source = "../../modules/X"                                      │
 │  Infra-AgentCore             (código Terraform — modules + compositions) │
@@ -84,7 +84,7 @@ AgentPlatform/
 
 ## 3. Componentes-AgentCore
 
-Repo de **componentes CI/CD reutilizables**. Cada componente expone un job genérico via `include: - component:`. La regla dura: **cero `rules`/`tags`/`default:` aquí** — esos viven en Compose. Acá solo lógica.
+Repo de **componentes CI/CD reutilizables**. Cada componente expone un job genérico via `include: - component:`. La regla dura: **cero `rules`/`tags`/`default:` aquí** — esos viven en Compose. Aquí solo lógica.
 
 ```
 Componentes-AgentCore/
@@ -214,7 +214,7 @@ Foundation contiene recursos que existen **una sola vez por cuenta AWS** (no uno
 
 Crea:
 - **2 KMS keys**: una para artefactos (S3 buckets de zips), otra para Secrets Manager
-- **3 S3 buckets** versionados y encriptados: `artifacts-{env}-agentcore-{agents|mcp|tools}`. Acá van los artefactos auditables.
+- **3 S3 buckets** versionados y encriptados: `artifacts-{env}-agentcore-{agents|mcp|tools}`. Aquí van los artefactos auditables.
 - **IAM role base** `agentcore-{env}-runtime-execution` (asumido por todos los runtimes que no declaren `runtime_iam` custom en el manifest)
 - **En PRD solamente**: una `deployer_deny_destroy_prd` policy con `Deny` explícito a `bedrock-agentcore:Delete*` + un role separado `emergency_destroyer` con MFA + lifecycle protection. Defensa en profundidad: si el pipeline GitLab se compromete, no puede borrar cosas críticas; un humano necesita asumir el `emergency_destroyer` con MFA reciente.
 
@@ -340,7 +340,7 @@ terraform {
 ```
 
 Declara qué versiones de Terraform y providers necesita el module:
-- `required_version`: el binario `terraform` debe ser >= 1.9. Si tenés 1.8, falla `init`.
+- `required_version`: el binario `terraform` debe ser >= 1.9. Si tienes 1.8, falla `init`.
 - `required_providers`: declara qué providers usa. El `~> 6.42.0` permite parches `6.42.x` pero no salta a 6.43+ sin commit explícito.
 
 Por qué archivo separado: para que un humano que abre el module **vea las versiones requeridas de un vistazo** sin scrollear `main.tf`. También facilita pin/upgrades centralizados.
@@ -395,7 +395,7 @@ locals {
 }
 ```
 
-`main.tf` en una composition **no crea recursos** — solo configura terraform/provider y define `locals` reutilizables. Si querés saber qué recursos crea una composition, abrís uno de los otros archivos `*.tf`.
+`main.tf` en una composition **no crea recursos** — solo configura terraform/provider y define `locals` reutilizables. Si quieres saber qué recursos crea una composition, abres uno de los otros archivos `*.tf`.
 
 #### Paso 2: cada `<componente>.tf` invoca un module
 
@@ -462,7 +462,7 @@ Declara qué espera la composition. El **deployable** la llena con un `terraform
 
 #### Por qué un archivo por module en la composition
 
-Cuando creás un nuevo arquetipo (ej: `agent-with-rag-and-tools`), lo más fácil es **copiar la composition más cercana** y agregar/quitar archivos `.tf`. No tenés que leer un `main.tf` gigante para entender qué piezas tiene. Si comparás `agent-base/` (3 archivos de modules) vs `agent-with-tools/` (6), la diferencia entre arquetipos es literalmente "qué archivos tiene".
+Cuando creas un nuevo arquetipo (ej: `agent-with-rag-and-tools`), lo más fácil es **copiar la composition más cercana** y agregar/quitar archivos `.tf`. No tienes que leer un `main.tf` gigante para entender qué piezas tiene. Si comparas `agent-base/` (3 archivos de modules) vs `agent-with-tools/` (6), la diferencia entre arquetipos es literalmente "qué archivos tiene".
 
 ---
 
@@ -511,7 +511,7 @@ El **código terraform** (modules + compositions) se versiona con tags semver en
 
 ## 7. Flujo end-to-end
 
-Acá unifico todo. Tomemos el caso típico: un dev de capability modifica el manifest de un agente y pushea a `dev`.
+Aquí unifico todo. Tomemos el caso típico: un dev de capability modifica el manifest de un agente y pushea a `dev`.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -598,7 +598,7 @@ Acá unifico todo. Tomemos el caso típico: un dev de capability modifica el man
 
 ### Qué pasa en rollback
 
-Editás el manifest del workload con la versión previa del runtime (o un tag de imagen anterior), pusheás. El pipeline detecta el cambio, hace todo el flujo de nuevo, y terraform crea una versión nueva del runtime apuntando a la imagen vieja. El concepto de "alias live" (que apunta a la versión activa) hace que los callers no necesiten cambiar nada.
+Editás el manifest del workload con la versión previa del runtime (o un tag de imagen anterior), haces push. El pipeline detecta el cambio, hace todo el flujo de nuevo, y terraform crea una versión nueva del runtime apuntando a la imagen vieja. El concepto de "alias live" (que apunta a la versión activa) hace que los callers no necesiten cambiar nada.
 
 ### Qué NO toca el pipeline
 

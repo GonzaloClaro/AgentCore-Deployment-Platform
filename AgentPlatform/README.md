@@ -3,7 +3,7 @@
 > **Tipo:** Repo de workloads (agentes, MCP servers, tools)
 > **Branching:** `dev` → `qa` → `main` (con tags semver para PRD)
 
-Aquí viven el código y los manifiestos de los agentes, MCP servers y tools de las comunidades. **Cada workload se despliega solo cuando se modifican archivos bajo su path** — el pipeline detecta cambios y dispara despliegues granulares.
+Aquí viven el código y los manifiestos de los agentes, MCP servers y tools de los equipos. **Cada workload se despliega solo cuando se modifican archivos bajo su path** — el pipeline detecta cambios y dispara despliegues granulares.
 
 ## Estructura
 

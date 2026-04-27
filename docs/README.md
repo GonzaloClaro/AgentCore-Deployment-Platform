@@ -18,7 +18,7 @@ Lee en este orden:
 4. **[01_IMPROVEMENTS_AND_FUTURE_WORK.md](./01_IMPROVEMENTS_AND_FUTURE_WORK.md)** — backlog priorizado.
 5. **[05_FLOWS_AND_DIAGRAMS.md](./05_FLOWS_AND_DIAGRAMS.md)** — flujos productivos y troubleshooting.
 
-### Si eres **dev de un equipo consumidor (CoE de IA, comunidad de práctica)**
+### Si eres **dev de un equipo consumidor (equipo central de IA, equipo consumidor)**
 Lee en este orden:
 1. `MANIFEST_REFERENCE.md` (raíz del repo) — qué puedes configurar en tu workload.
 2. **[03_INDEX_GLOSSARY.md](./03_INDEX_GLOSSARY.md)** — tabla "quiero hacer X → archivo Y".

@@ -113,7 +113,7 @@ include:
     inputs: { ... }
   # ... más componentes
 
-# rules y orden explícito (needs:) viven SOLO acá
+# rules y orden explícito (needs:) viven SOLO aquí
 render-tfvars:
   needs: [validate-manifest, package-artifact, build-image, scan-image, publish-prompts, apply-policy]
 ```
@@ -293,7 +293,7 @@ agentcore-{env}/
 └── README.md
 ```
 
-**No hay módulos ni composiciones aquí.** El deployable solo tiene tfvars + provider config + state. La composition la baja vía `git::` con tag pinneado de `Infra-AgentCore` cuando el pipeline corre.
+**No hay módulos ni composiciones aquí.** El deployable solo tiene tfvars + provider config + state. La composition la baja vía `git::` con tag fijado de `Infra-AgentCore` cuando el pipeline corre.
 
 ### Cómo se ejecuta una composition desde un deployable
 

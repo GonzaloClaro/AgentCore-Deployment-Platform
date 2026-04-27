@@ -4,7 +4,7 @@
 
 Plataforma diseñada para que un dev de capability declare su workload en un `manifest.yaml` y todo lo demás —build de imagen, escaneo de vulnerabilidades, render de Terraform, deploy multi-cuenta— se haga automáticamente vía pipelines CI/CD.
 
-## TL;DR — qué hay acá
+## TL;DR — qué hay aquí
 
 Un sistema completo de deployment para agentes de IA pensado como **5 repos lógicos** que se acoplan vía contratos:
 
@@ -16,7 +16,7 @@ Un sistema completo de deployment para agentes de IA pensado como **5 repos lóg
 | [`Infra-AgentCore/`](Infra-AgentCore/) | Terraform | Modules + compositions + foundation |
 | [`iac/AgentCore/agentcore-{dev,qa,prd}/`](iac/AgentCore/) | Deployables | State Terraform por ambiente |
 
-**📖 Para entender cómo encajan, leé [`docs/resumen.md`](docs/resumen.md).** Cubre cada repo en detalle, los 4 archivos canónicos de un module Terraform, cómo se construyen las compositions, y el flujo end-to-end desde un `git push` hasta los recursos AWS creados.
+**📖 Para entender cómo encajan, lee [`docs/resumen.md`](docs/resumen.md).** Cubre cada repo en detalle, los 4 archivos canónicos de un module Terraform, cómo se construyen las compositions, y el flujo end-to-end desde un `git push` hasta los recursos AWS creados.
 
 ## Stack técnico
 
@@ -35,7 +35,7 @@ Un sistema completo de deployment para agentes de IA pensado como **5 repos lóg
 - **Foundation separado de workloads**: KMS keys, IAM roles base y los 3 default gateways viven en `foundation/` con state Terraform aislado, así un workload no puede borrar accidentalmente la base.
 - **Promoción dev → qa → prd** con manual approval entre QA y PRD.
 - **Defensa en profundidad en PRD**: deny policy explícita sobre `bedrock-agentcore:Delete*` para el role del pipeline + `emergency_destroyer` role separado con MFA + lifecycle protection.
-- **Determinismo del provider**: `~> 6.42.0` pinneado + `.terraform.lock.hcl` committeado.
+- **Determinismo del provider**: `~> 6.42.0` fijado + `.terraform.lock.hcl` committeado.
 
 ## Estructura del repo
 
@@ -52,7 +52,7 @@ Un sistema completo de deployment para agentes de IA pensado como **5 repos lóg
 │   ├── agentcore-dev/
 │   ├── agentcore-qa/
 │   └── agentcore-prd/
-├── docs/                   # documentación (empezá por resumen.md)
+├── docs/                   # documentación (comienza por resumen.md)
 └── tasks/                  # planes y lessons-learned de iteraciones
 ```
 
@@ -60,7 +60,7 @@ Un sistema completo de deployment para agentes de IA pensado como **5 repos lóg
 
 | Doc | Contenido |
 |-----|-----------|
-| **[`docs/resumen.md`](docs/resumen.md)** | **Empezá acá**: explicación end-to-end de los 5 repos y el flujo de despliegue |
+| **[`docs/resumen.md`](docs/resumen.md)** | **Comienza aquí**: explicación end-to-end de los 5 repos y el flujo de despliegue |
 | [`PLAN.md`](PLAN.md) | Roadmap por fases del proyecto |
 | [`MANIFEST_REFERENCE.md`](MANIFEST_REFERENCE.md) | Schema completo del manifest opinado |
 | [`MULTI_ACCOUNT.md`](MULTI_ACCOUNT.md) | Setup multi-cuenta AWS (dev/qa/prd) |
@@ -72,7 +72,7 @@ Un sistema completo de deployment para agentes de IA pensado como **5 repos lóg
 
 ## Notas para quien llega frío
 
-- **Monorepo intencional**: el sistema está diseñado como 5 repos GitLab separados (las pipelines hacen `include: - project: Componentes/...` y `git clone .../iac/...`). Acá viven juntos en una sola raíz para que sea más fácil leerlo en GitHub. Las cross-references entre pipelines apuntan a paths GitLab que **no existen** en GitHub — los workflows CI no corren tal cual acá.
+- **Monorepo intencional**: el sistema está diseñado como 5 repos GitLab separados (las pipelines hacen `include: - project: Componentes/...` y `git clone .../iac/...`). Aquí viven juntos en una sola raíz para que sea más fácil leerlo en GitHub. Las cross-references entre pipelines apuntan a paths GitLab que **no existen** en GitHub — los workflows CI no corren tal cual aquí.
 - **Account ID `111122223333`**: aparece en varios lugares (manifests de ejemplo, tests, JSON-schemas). Es el **AWS sample account ID** oficial usado en toda la doc de AWS — equivalente a `example.com` para URLs. No es info real.
 - **Estado del código**: la infra Terraform pasa `terraform validate` end-to-end contra el provider `hashicorp/aws ~> 6.42`. Los recursos AgentCore que usa están en GA. Los componentes Python tienen unit tests bajo `Componentes-AgentCore/tests/`. El sistema **no está deployado** públicamente — el repo es código + diseño.
 
@@ -97,4 +97,4 @@ pytest tests/
 
 ## Licencia
 
-Sin licencia explícita — código de referencia. Si te interesa reusar partes específicas, abrí un issue.
+Sin licencia explícita — código de referencia. Si te interesa reusar partes específicas, abre un issue.
