@@ -35,7 +35,7 @@ Un sistema completo de deployment para agentes de IA pensado como **5 repos lóg
 - **Foundation separado de workloads**: KMS keys, IAM roles base y los 3 default gateways viven en `foundation/` con state Terraform aislado, así un workload no puede borrar accidentalmente la base.
 - **Promoción dev → qa → prd** con manual approval entre QA y PRD.
 - **Defensa en profundidad en PRD**: deny policy explícita sobre `bedrock-agentcore:Delete*` para el role del pipeline + `emergency_destroyer` role separado con MFA + lifecycle protection.
-- **Determinismo del provider**: `~> 6.42.0` fijado + `.terraform.lock.hcl` committeado.
+- **Determinismo del provider**: `~> 6.53.0` fijado + `.terraform.lock.hcl` committeado.
 
 ## Estructura del repo
 

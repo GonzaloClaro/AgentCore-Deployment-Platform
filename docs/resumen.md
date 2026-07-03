@@ -333,7 +333,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 6.42.0"
+      version = "~> 6.53.0"
     }
   }
 }
@@ -341,7 +341,7 @@ terraform {
 
 Declara qué versiones de Terraform y providers necesita el module:
 - `required_version`: el binario `terraform` debe ser >= 1.9. Si tienes 1.8, falla `init`.
-- `required_providers`: declara qué providers usa. El `~> 6.42.0` permite parches `6.42.x` pero no salta a 6.43+ sin commit explícito.
+- `required_providers`: declara qué providers usa. El `~> 6.53.0` permite parches `6.53.x` pero no salta a 6.54+ sin commit explícito.
 
 Por qué archivo separado: para que un humano que abre el module **vea las versiones requeridas de un vistazo** sin scrollear `main.tf`. También facilita pin/upgrades centralizados.
 
@@ -381,7 +381,7 @@ compositions/agent-with-tools/
 terraform {
   required_version = ">= 1.9"
   required_providers {
-    aws = { source = "hashicorp/aws", version = "~> 6.42.0" }
+    aws = { source = "hashicorp/aws", version = "~> 6.53.0" }
   }
 }
 
@@ -564,7 +564,7 @@ Aquí unifico todo. Tomemos el caso típico: un dev de capability modifica el ma
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │ 5. terraform init/plan/apply en compositions/{COMPOSITION_NAME}/             │
 │                                                                              │
-│    terraform init  → descarga hashicorp/aws ~> 6.42.0                        │
+│    terraform init  → descarga hashicorp/aws ~> 6.53.0                        │
 │                    → carga state desde S3                                    │
 │    terraform plan  → calcula diff entre state y .tf + tfvars                 │
 │    terraform apply → invoca AWS APIs:                                        │

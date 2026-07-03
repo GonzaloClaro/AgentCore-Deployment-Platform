@@ -750,7 +750,7 @@ AgentCore evoluciona rápido. Plan trimestral:
 
 1. Revisar changelog del provider entre la versión actual y la última: https://github.com/hashicorp/terraform-provider-aws/releases
 2. Buscar breaking changes en recursos `aws_bedrockagentcore_*`.
-3. En una rama, actualizar `versions.tf` (subir `~> 6.42.0` a `~> 6.4X.0`).
+3. En una rama, actualizar `versions.tf` (subir `~> 6.53.0` a `~> 6.5X.0`).
 4. Ejecutar `tofu init -upgrade` y `./scripts/tf-check.sh`.
 5. Si pasa, hacer MR. Si falla, ajustar código módulo por módulo siguiendo errores del validate.
 6. Probar en sandbox antes de mergear a `main`.
