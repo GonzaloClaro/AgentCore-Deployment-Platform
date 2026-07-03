@@ -35,7 +35,7 @@
 | # | Componente | Para qué sirve | Cuándo corre |
 |---|---|---|---|
 | 1 | `validate_manifest` | Valida `manifest.yaml` contra JSON-schema | Stage `validate`, siempre |
-| 2 | `package_artifact` | Zip del workload + upload S3 (auditable) | Stage `package`, siempre |
+| 2 | `package_artifact` | Zip del workload + upload S3 (auditable) | Stage `package`, siempre (soft-skip si `features.enable_artifact_audit: false` — el job corre pero no zipea/sube) |
 | 3 | `build_image` | Docker buildx ARM64 + push ECR | Stage `build`, siempre |
 | 4 | `scan_image` | Trivy/Inspector con gate por severity | Stage `scan`, siempre |
 | 5 | `upload_secret` | CI var (masked) → Secrets Manager | Stage `secrets`, solo si hay secretos definidos |
@@ -81,6 +81,7 @@
 | `spec.runtime.env` | ✅ Dev | `{}` | `module.runtime.env_vars` | manifest |
 | `spec.runtime.memory_strategy` | ✅ Dev | `summarization` | `module.memory.strategies[].type` | manifest |
 | `spec.runtime.target_version` | ✅ Dev (rollback) | `null` (versión nueva) | `aws_bedrockagentcore_agent_runtime_alias.routing` | manifest |
+| `spec.runtime.server_protocol` | ✅ Dev | `HTTP` | `module.runtime.server_protocol` (`protocol_configuration.server_protocol`) | manifest |
 | `image_uri` | ⚙️ Auto | `ecr/agentcore-{kind}-{capability}-{name}:{sha}` | `module.runtime.image_uri` | pipeline (`build_image`) |
 | `role_arn` | 🔒 Plataforma | — | `module.runtime.role_arn` | `env-defaults.default_role_arn` |
 | `network_mode` | 🔒 Plataforma | `PUBLIC` | `module.runtime.network_mode` | hardcoded en módulo (cambiar requiere PR a Infra-AgentCore) |
@@ -95,6 +96,23 @@
 | (event_expiry_seconds) | 🔒 Plataforma | 30 días | módulo (no expuesto por ahora) |
 
 > Para deshabilitar memory: `memory_strategy: none`.
+
+### 2.4.bis Patrón A2A / agents-as-tools
+
+Un agente puede invocar a otro runtime AgentCore como "persona"/sub-agente vía protocolo A2A. No hace falta una composition especial: cualquiera de las 5 compositions con `module "runtime"` (`agent-base`, `agent-chatbot`, `agent-with-kb`, `agent-with-tools`, `mcp-server`) acepta `spec.runtime.server_protocol: A2A`.
+
+```yaml
+spec:
+  composition: agent-chatbot
+  runtime:
+    entrypoint: agent.py
+    server_protocol: A2A
+    env:
+      AGENTE_PERSONA_ARN: "arn:aws:bedrock-agentcore:us-east-1:111122223333:runtime/otro-agente-dev-xxxxx"
+      AGENTE_PERSONA_PROTOCOL: "A2A"
+```
+
+**Limitación actual (deliberada):** el ARN del agente-persona se declara a mano en `runtime.env` — no hay descubrimiento automático (ni SSM Parameter Store, ni `terraform_remote_state`). El dev debe copiar el ARN del runtime ya desplegado. Ver `docs/01_IMPROVEMENTS_AND_FUTURE_WORK.md` §3.4 para el ítem de auto-discovery, evaluado y pospuesto.
 
 ### 2.5 Knowledge Base (`module "knowledge-base"`)
 
@@ -468,7 +486,7 @@ Una tool puede vivir en 3 lugares según `spec.tool.kind`:
 metadata: { name, capability, owner, description, tags }
 spec:
   composition: <una de 7: agent-base | agent-chatbot | agent-with-kb | agent-with-tools | mcp-server | tool-lambda | gateway-deploy>
-  runtime: { entrypoint, env, memory_strategy }
+  runtime: { entrypoint, env, memory_strategy, server_protocol }
   knowledge_base: { embedding, sources_file }    # opcional
   prompts: [{ file, alias }]                     # opcional
   gateway_targets: [{ gateway, tools_schema }]   # opcional

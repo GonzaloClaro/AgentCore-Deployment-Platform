@@ -9,6 +9,7 @@ import zipfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 from utils.aws_client import client
+from utils.manifest_parser import load_manifest
 
 
 def make_zip(workload_path: pathlib.Path, output_zip: pathlib.Path) -> None:
@@ -30,6 +31,16 @@ def main() -> int:
     if not workload_path.is_dir():
         print(f"ERROR: workload_path no existe: {workload_path}", file=sys.stderr)
         return 2
+
+    manifest = load_manifest(workload_path / "manifest.yaml")
+    enable_audit = manifest.get("spec", {}).get("features", {}).get("enable_artifact_audit", True)
+    if not enable_audit:
+        print("[package_artifact] enable_artifact_audit=false — se salta zip/upload")
+        pathlib.Path("artifact_meta.json").write_text(json.dumps({
+            "kind": kind, "capability": capability, "name": name,
+            "environment": env, "sha": sha, "s3_uri": "", "audit_skipped": True,
+        }, indent=2))
+        return 0
 
     output_zip = pathlib.Path(f"/tmp/{name}-{sha}.zip")
     make_zip(workload_path, output_zip)

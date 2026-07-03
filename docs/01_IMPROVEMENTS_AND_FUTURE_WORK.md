@@ -52,7 +52,7 @@
 | 3.1 | Composiciones adicionales según demanda (no por adelantado) | "Crear nueva composition copiando la más cercana" es buen patrón, pero algunas se materializarán | Variable | Cuando 3+ workloads pidan lo mismo |
 | 3.2 | Soporte de **inference profile auto-resolution** | Mapear `model_id: claude-3-5-sonnet` → ARN del inference profile correcto sin que el dev lo escriba | Medio | Cuando >5 workloads usen cross-region |
 | 3.3 | Soporte de **AgentCore Browser** y **Code Interpreter** como módulos TF + componentes CI | Casos de uso de automatización conversacional o web los pedirán | Alto | Cuando 1er use case real lo pida |
-| 3.4 | Soporte de **A2A protocol** para agentes hablando con otros agentes | AgentCore lo soporta nativo. Composition `agent-with-a2a` cuando se necesite | Alto | Cuando aparezca el primer caso multi-agente |
+| 3.4 | ~~Soporte de **A2A protocol**~~ Auto-discovery de ARN entre agentes (A2A) | Modo manual ya soportado: `spec.runtime.server_protocol: A2A` + ARN del agente-persona a mano en `runtime.env` (ver MANIFEST_REFERENCE.md §2.4.bis). Falta: publicar/descubrir ARNs automáticamente (SSM Parameter Store o `terraform_remote_state`) para no depender de copy-paste manual | Medio | Cuando el copy-paste manual de ARNs entre 3+ agentes se vuelva doloroso |
 | 3.5 | Modelo fallback automático en helper de `agent.py` | Si el modelo PRIMARY falla, retry con FALLBACK | Bajo | Cuando un workload reporte failures |
 | 3.6 | Azure API key rotation automation | Lambda + EventBridge que rota la key cada N días | Medio | Cuando haya >3 workloads Azure |
 | 3.7 | Migración a recursos TF nativos cuando AWS los exponga | `aws_bedrockagentcore_policy_engine`, fix de #46128 | Bajo (cuando exista) | Vigilancia trimestral del provider |

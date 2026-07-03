@@ -8,7 +8,8 @@ module "runtime" {
     var.runtime.env,
     local.has_kb ? { KNOWLEDGE_BASE_ID = module.knowledge_base[0].knowledge_base_id } : {}
   )
-  memory_id   = module.memory.memory_id
+  server_protocol = var.runtime.server_protocol
+  memory_id       = module.memory.memory_id
   pipeline_id = var.pipeline_id
   tags        = local.base_tags
   models      = var.models

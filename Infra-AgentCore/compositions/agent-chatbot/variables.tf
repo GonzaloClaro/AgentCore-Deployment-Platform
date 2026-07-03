@@ -54,6 +54,7 @@ variable "runtime" {
     entrypoint      = optional(string, "")
     env             = optional(map(string), {})
     memory_strategy = optional(string, "summarization")
+    server_protocol = optional(string, "HTTP")
   })
   description = "Spec del runtime del manifest: entrypoint (consumido por Dockerfile), env vars, strategy de memory."
 }

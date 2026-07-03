@@ -5,10 +5,11 @@ module "runtime" {
 
   name = local.runtime_name
   # Si runtime_iam declarado → role custom; si no → default compartido. Local viene de runtime_role.tf
-  role_arn    = local.effective_runtime_role_arn
-  image_uri   = var.image_uri
-  env_vars    = var.runtime.env
-  memory_id   = null
+  role_arn        = local.effective_runtime_role_arn
+  image_uri       = var.image_uri
+  env_vars        = var.runtime.env
+  server_protocol = var.runtime.server_protocol
+  memory_id       = null
   pipeline_id = var.pipeline_id
   tags        = local.base_tags
   models      = var.models

@@ -42,6 +42,21 @@ spec:
     memory_strategy: summarization    # summarization | semantic | user-preference | none
     # Para rollback: descomenta y apunta a la versión previa
     # target_version: "3"
+    # server_protocol: HTTP            # HTTP (default) | A2A
+
+  # ---------------------------------------------------------------------------
+  # Patrón A2A / agents-as-tools — un agente invoca a otro runtime AgentCore como
+  # "persona"/sub-agente. Sin descubrimiento automático de ARN: el ARN del agente
+  # invocado se declara a mano en runtime.env (queda como mejora futura ver
+  # docs/01_IMPROVEMENTS_AND_FUTURE_WORK.md §3.4).
+  #
+  # runtime:
+  #   entrypoint: agent.py
+  #   server_protocol: A2A
+  #   env:
+  #     AGENTE_PERSONA_ARN: "arn:aws:bedrock-agentcore:us-east-1:111122223333:runtime/otro-agente-dev-xxxxx"
+  #     AGENTE_PERSONA_PROTOCOL: "A2A"
+  # ---------------------------------------------------------------------------
 
   # ---------------------------------------------------------------------------
   # Models — modelos LLM que usa el agente.
@@ -176,6 +191,9 @@ spec:
     enable_observability: true        # crea log group + X-Ray + dashboard
     enable_policies: false            # set true para aplicar gateway_policies (Cedar)
     enable_custom_role: false         # forzar role custom incluso sin policies declaradas
+    # enable_artifact_audit: false    # default true (todas las compositions, no solo agent-full).
+                                       # false = el stage package_artifact corre pero no zipea/sube a S3
+                                       # (no afecta el deploy: la imagen a ECR sigue siendo obligatoria).
     # Nota: prompts siempre van vía SDK (publish_prompt). No hay opción Terraform.
 
 # =============================================================================

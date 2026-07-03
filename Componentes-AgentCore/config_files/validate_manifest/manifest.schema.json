@@ -92,6 +92,12 @@
             "target_version": {
               "type": ["string", "null"],
               "description": "Para rollback: versión a la que apuntar el alias 'live'. null = nueva versión."
+            },
+            "server_protocol": {
+              "type": "string",
+              "enum": ["HTTP", "A2A"],
+              "default": "HTTP",
+              "description": "Protocolo del runtime. A2A = agente invocable por otro agente AgentCore (agents-as-tools). El ARN de la persona se pasa a mano vía runtime.env (ej. AGENTE_PERSONA_ARN)."
             }
           }
         },
@@ -294,6 +300,11 @@
               "type": "boolean",
               "default": false,
               "description": "Forzar creación de role custom aunque no haya policies declaradas. Útil para preparar antes de cargar policies."
+            },
+            "enable_artifact_audit": {
+              "type": "boolean",
+              "default": true,
+              "description": "Zipea src/ y sube a S3 como artefacto auditable (componente package_artifact). No afecta el deploy (siempre se despliega vía imagen ECR); solo controla si se genera el respaldo auditable. false = se salta el zip/upload."
             }
           }
         },
